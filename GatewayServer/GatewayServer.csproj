@@ -12,4 +12,8 @@
     <PackageReference Include="Yarp.ReverseProxy" Version="1.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\GatewayServer.AsyncProxyConfig\GatewayServer.AsyncProxyConfig.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,52 +1,48 @@
-using GatewayServer.ProxyConfigProviders.DbProxyConfigProvider;
-using Yarp.ReverseProxy.Configuration;
+using GatewayServer.AsyncProxyConfig.ConfigHelper;
+using GatewayServer.AsyncProxyConfig.ProxyAsyncProvider;
+using GatewayServer.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
+// 添加controllers
+builder.Services.AddControllers();
+// 获取反向代理配置
+//builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+builder.Services.AddReverseProxy().LoadFromAsyncProvider(AsyncConfigHelperType.DB, (succeed, ex) =>
+{
+    if (succeed)
+    {
+        Console.WriteLine("读取配置成功");
+    }
+    else
+    {
+        Console.WriteLine("记录日志，加载配置失败 {0}", ex);
+        //System.Diagnostics.Process.GetCurrentProcess().Kill();
+    }
+});
 
 var app = builder.Build();
 
+// 注册控制器
+app.MapControllers();
 
-app.MapPost("/reload", async (ctx) =>
+// 允许外层请求跨域
+app.UseCors(builder =>
 {
-    // 1. 先校验 TOKEN
-
-    // 2. 判空
-    var dcp = app.Services.GetService<IProxyConfigProvider>() as DbProxyConfigProvider;
-    if (dcp == null)
-    {
-        return;
-    }
-
-    // 3. 实际执行 Reload
-    await dcp.Reload();
-
-    await ctx.Response.WriteAsync("Refresh ok!");
+    builder
+         .AllowAnyOrigin() // 允许所有的 origin
+         .AllowAnyMethod()
+         .AllowAnyHeader();
 });
 
-var LogRequest = (HttpContext ctx) =>
-{
-    Console.WriteLine(ctx.Request.Path);
-};
-
-
-var LogResponse = (HttpContext ctx) =>
-{
-};
-
 app.UseRouting();
-
+// 使用路由端点
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapReverseProxy((proxyPipeline) =>
     {
-        proxyPipeline.Use(async (ctx, next) =>
-        {
-            LogRequest(ctx);
-            await next();
-            LogResponse(ctx);
-        });
+        // 注册日志记录中间件
+        proxyPipeline.UseLogRequest();
     });
 });
 
