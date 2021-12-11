@@ -15,7 +15,7 @@ CREATE TABLE `cluster` (
   `modify_date` bigint(20) NOT NULL COMMENT '修改时间',
   `modifier_name` varchar(254) NOT NULL COMMENT '修改人',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4
 GO
 
 CREATE TABLE `destination` (
@@ -30,7 +30,7 @@ CREATE TABLE `destination` (
   `modify_date` bigint(20) NOT NULL COMMENT '修改时间',
   `modifier_name` varchar(254) NOT NULL COMMENT '修改人',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4
 GO
 
 CREATE TABLE `route` (
@@ -46,4 +46,4 @@ CREATE TABLE `route` (
   `modify_date` bigint(20) NOT NULL COMMENT '修改时间',
   `modifier_name` varchar(254) NOT NULL COMMENT '修改人',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4

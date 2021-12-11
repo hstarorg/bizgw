@@ -4,6 +4,8 @@ A simple gateway based on Yarp.ReverseProxy
 
 ## 如何使用
 
+> 大家如果对不想折腾构建打包这些，也可以直接拉取我推送的镜像进行体验：https://hub.docker.com/repository/docker/hstarorg/gateway
+
 待补充...
 
 ### 重新加载配置
