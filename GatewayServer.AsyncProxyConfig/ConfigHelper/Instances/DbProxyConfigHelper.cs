@@ -10,7 +10,8 @@ namespace GatewayServer.AsyncProxyConfig.ConfigHelper.Instances
         {
             db = new SqlSugarScope(new ConnectionConfig()
             {
-                ConnectionString = "server=192.168.31.250;port=3306;uid=root;pwd=localDev;database=gatewaydb",// 连接符字串
+                // server=192.168.31.250;port=3306;uid=root;pwd=localDev;database=gatewaydb
+                ConnectionString = Environment.GetEnvironmentVariable("ConnectionString"), // 连接符字串
                 DbType = DbType.MySql,//数据库类型
                 IsAutoCloseConnection = true //不设成true要手动close
             });

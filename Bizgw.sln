@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayServer.Tests", "Gate
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayServer.AsyncProxyConfig", "GatewayServer.AsyncProxyConfig\GatewayServer.AsyncProxyConfig.csproj", "{77CBB521-3B52-4532-9B1A-742B64F012A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayServer.ConfigrationAPI", "GatewayServer.ConfigrationAPI\GatewayServer.ConfigrationAPI.csproj", "{2CD019FC-7B52-48EB-BE94-C9B750963CF7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{77CBB521-3B52-4532-9B1A-742B64F012A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77CBB521-3B52-4532-9B1A-742B64F012A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77CBB521-3B52-4532-9B1A-742B64F012A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CD019FC-7B52-48EB-BE94-C9B750963CF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CD019FC-7B52-48EB-BE94-C9B750963CF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CD019FC-7B52-48EB-BE94-C9B750963CF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CD019FC-7B52-48EB-BE94-C9B750963CF7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

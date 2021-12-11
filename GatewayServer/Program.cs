@@ -1,9 +1,12 @@
+using GatewayServer;
 using GatewayServer.AsyncProxyConfig.ConfigHelper;
 using GatewayServer.AsyncProxyConfig.ProxyAsyncProvider;
 using GatewayServer.Middlewares;
+using GatewayServer.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddLogging();
 // 添加controllers
 builder.Services.AddControllers();
 // 获取反向代理配置
@@ -17,11 +20,13 @@ builder.Services.AddReverseProxy().LoadFromAsyncProvider(AsyncConfigHelperType.D
     else
     {
         Console.WriteLine("记录日志，加载配置失败 {0}", ex);
-        //System.Diagnostics.Process.GetCurrentProcess().Kill();
+        System.Diagnostics.Process.GetCurrentProcess().Kill();
     }
 });
 
 var app = builder.Build();
+
+var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
 
 // 注册控制器
 app.MapControllers();
@@ -45,5 +50,8 @@ app.UseEndpoints(endpoints =>
         proxyPipeline.UseLogRequest();
     });
 });
+
+GlobalConfig.AuthCode = Environment.GetEnvironmentVariable("AutCode") ?? GatewayUtil.GenerateRandomString();
+logger.LogInformation("AuthCode={0}", GlobalConfig.AuthCode);
 
 app.Run();
