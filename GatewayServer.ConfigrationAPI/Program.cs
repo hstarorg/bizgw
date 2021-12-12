@@ -1,3 +1,5 @@
+using GatewayServer.ConfigrationAPI;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +8,8 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+// ×¢²á dal ºÍ bll
+builder.Services.UseDalAndBlls();
 
 var app = builder.Build();
 
