@@ -45,5 +45,6 @@ CREATE TABLE `route` (
   `creator_name` varchar(254) NOT NULL COMMENT '创建人',
   `modify_date` bigint(20) NOT NULL COMMENT '修改时间',
   `modifier_name` varchar(254) NOT NULL COMMENT '修改人',
+  `transforms` varchar(4000) NOT NULL COMMENT '请求转换配置',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using Newtonsoft.Json;
 using Yarp.ReverseProxy.Configuration;
 
 namespace GatewayServer.AsyncProxyConfig.Entities
@@ -27,11 +27,33 @@ namespace GatewayServer.AsyncProxyConfig.Entities
                     {
                         Path = r.MatchPath,
                         Methods = r.MatchMethods.Split('|')
-                    }
+                    },
+                    // 处理请求转换
+                    Transforms = this.BuildTransforms(r.Transforms)
                 };
                 routeList.Add(routeConfig);
             });
             return routeList;
+        }
+
+        private IReadOnlyList<IReadOnlyDictionary<string, string>> BuildTransforms(string transformsStr)
+        {
+            var transforms = new List<IReadOnlyDictionary<string, string>>();
+            // 先解析出数据
+            try
+            {
+                var transformList = JsonConvert.DeserializeObject<List<TransformItem>>(transformsStr);
+                transformList.ForEach(transform =>
+                {
+                    transforms.Add(transform.Value);
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+
+            return transforms;
         }
 
         private List<ClusterConfig> ProcessCluster(List<ClusterEntity> clusters)

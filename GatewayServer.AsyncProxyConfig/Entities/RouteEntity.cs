@@ -26,6 +26,10 @@ namespace GatewayServer.AsyncProxyConfig.Entities
         [SugarColumn(ColumnName = "match_methods")]
         public string MatchMethods { get; set; } = "";
 
+
+        [SugarColumn(ColumnName = "transforms")]
+        public string Transforms { get; set; } = "";
+
         /// <summary>
         /// 是否删除，逻辑删
         /// </summary>
