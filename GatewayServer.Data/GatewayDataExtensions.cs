@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GatewayServer.AsyncProxyConfig.Data
+namespace GatewayServer.Data
 {
     public static class GatewayDataExtensions
     {

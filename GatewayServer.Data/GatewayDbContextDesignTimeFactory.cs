@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace GatewayServer.AsyncProxyConfig.Data
+namespace GatewayServer.Data
 {
     /// <summary>
     /// 设计期(dotnet ef)用的工厂。迁移针对 PostgreSQL 生成；

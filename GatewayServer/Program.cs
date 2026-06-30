@@ -1,7 +1,7 @@
 using GatewayServer;
 using GatewayServer.AsyncProxyConfig.ConfigHelper;
-using GatewayServer.AsyncProxyConfig.Data;
 using GatewayServer.AsyncProxyConfig.ProxyAsyncProvider;
+using GatewayServer.Data;
 using GatewayServer.Middlewares;
 using GatewayServer.Utils;
 

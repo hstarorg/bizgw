@@ -1,5 +1,5 @@
-using GatewayServer.AsyncProxyConfig.Data;
 using GatewayServer.ConfigrationAPI;
+using GatewayServer.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using GatewayServer.Data.Entities;
+using Newtonsoft.Json;
 using Yarp.ReverseProxy.Configuration;
 
 namespace GatewayServer.AsyncProxyConfig.Entities

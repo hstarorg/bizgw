@@ -3,7 +3,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace GatewayServer.AsyncProxyConfig.Migrations
+namespace GatewayServer.Data.Migrations
 {
     /// <inheritdoc />
     public partial class Init : Migration

@@ -1,7 +1,7 @@
-using GatewayServer.AsyncProxyConfig.Entities;
+using GatewayServer.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace GatewayServer.AsyncProxyConfig.Data
+namespace GatewayServer.Data
 {
     public class GatewayDbContext : DbContext
     {

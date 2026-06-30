@@ -1,5 +1,6 @@
-using GatewayServer.AsyncProxyConfig.Data;
 using GatewayServer.AsyncProxyConfig.Entities;
+using GatewayServer.Data;
+using GatewayServer.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GatewayServer.AsyncProxyConfig.ConfigHelper.Instances
