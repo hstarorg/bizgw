@@ -1,23 +1,23 @@
 # One-command containerized deployment for local/dev use.
 #   docker compose up -d --build
 #
-# NOTE: the schema in docs/*.sql uses `GO` separators and has no CREATE DATABASE,
-# so it is NOT auto-imported. After the db is up, import it once (clean the GO lines first),
-# e.g. against the `gatewaydb` database created below.
+# NOTE: the schema is managed by EF Core Migrations, not auto-imported by this db service.
+# After the db is up, create the tables once with:
+#   ConnectionString="Host=localhost;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb" \
+#     dotnet ef database update --project GatewayServer.Data
 
 services:
   db:
-    image: mysql:8.0
+    image: postgres:18
     environment:
-      MYSQL_ROOT_PASSWORD: localDev
-      MYSQL_DATABASE: gatewaydb
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      POSTGRES_PASSWORD: localDev
+      POSTGRES_DB: gatewaydb
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - db-data:/var/lib/mysql
+      - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-plocalDev"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gatewaydb"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -27,7 +27,7 @@ services:
       context: .
       dockerfile: GatewayServer/Dockerfile
     environment:
-      ConnectionString: "server=db;port=3306;uid=root;pwd=localDev;database=gatewaydb"
+      ConnectionString: "Host=db;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb"
       AuthCode: "change-me-in-prod"
     ports:
       - "8889:8080"
@@ -40,7 +40,7 @@ services:
       context: .
       dockerfile: GatewayServer.ControlPlane/Dockerfile
     environment:
-      ConnectionString: "server=db;port=3306;uid=root;pwd=localDev;database=gatewaydb"
+      ConnectionString: "Host=db;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb"
     ports:
       - "8890:8080"
     depends_on:

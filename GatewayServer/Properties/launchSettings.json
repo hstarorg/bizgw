@@ -12,7 +12,7 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "ConnectionString": "server=192.168.31.250;port=3306;uid=root;pwd=localDev;database=gatewaydb",
+        "ConnectionString": "Host=localhost;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb",
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "applicationUrl": "http://localhost:5235",
