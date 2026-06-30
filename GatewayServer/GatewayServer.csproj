@@ -8,16 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
     <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GatewayServer.AsyncProxyConfig\GatewayServer.AsyncProxyConfig.csproj" />
+    <ProjectReference Include="..\GatewayServer.ConfigProvider\GatewayServer.ConfigProvider.csproj" />
   </ItemGroup>
 
 </Project>

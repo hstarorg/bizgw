@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Primitives;
+using Microsoft.Extensions.Primitives;
 using Yarp.ReverseProxy.Configuration;
 
-namespace GatewayServer.AsyncProxyConfig.ProxyAsyncProvider
+namespace GatewayServer.ConfigProvider
 {
     public class AsyncProxyConfig : IProxyConfig
     {
-        private readonly CancellationTokenSource cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource cts = new();
         public AsyncProxyConfig(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters)
         {
             ChangeToken = new CancellationChangeToken(cts.Token);

@@ -1,21 +1,15 @@
 using System.Text.Json;
-using GatewayServer.AsyncProxyConfig.Entities;
 using GatewayServer.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace GatewayServer.AsyncProxyConfig.ConfigHelper.Instances
+namespace GatewayServer.ConfigProvider
 {
     /// <summary>
-    /// 默认拉轴实现：读 config_snapshot 的 active 行。数据面不再直接查 route/cluster/destination 编辑表。
+    /// 默认拉轴实现:读 config_snapshot 的 active 行。数据面不直接查 route/cluster/destination 编辑表。
     /// </summary>
-    public class DbConfigSource : IProxyConfigSource
+    public class DbConfigSource(IDbContextFactory<GatewayDbContext> dbContextFactory) : IProxyConfigSource
     {
-        private readonly IDbContextFactory<GatewayDbContext> dbContextFactory;
-
-        public DbConfigSource(IDbContextFactory<GatewayDbContext> dbContextFactory)
-        {
-            this.dbContextFactory = dbContextFactory;
-        }
+        private readonly IDbContextFactory<GatewayDbContext> dbContextFactory = dbContextFactory;
 
         public async Task<long> GetVersionAsync()
         {
@@ -27,7 +21,7 @@ namespace GatewayServer.AsyncProxyConfig.ConfigHelper.Instances
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<ProxyConfigEntity> GetConfigAsync()
+        public async Task<ProxyConfigData> GetConfigAsync()
         {
             await using var db = await dbContextFactory.CreateDbContextAsync();
 
@@ -36,16 +30,16 @@ namespace GatewayServer.AsyncProxyConfig.ConfigHelper.Instances
                 .Where(x => x.IsActive)
                 .FirstOrDefaultAsync();
 
-            // 尚无任何发布版本：返回空配置(网关空跑,等待首次发布)
+            // 尚无任何发布版本:返回空配置(网关空跑,等待首次发布)
             if (snapshot == null)
             {
-                return new ProxyConfigEntity([], []);
+                return new ProxyConfigData([], []);
             }
 
             var doc = JsonSerializer.Deserialize<ConfigSnapshotDoc>(snapshot.Doc)
                 ?? throw new InvalidOperationException($"配置快照 version={snapshot.Version} 反序列化为空。");
 
-            // 目标按 cluster_code 分组，填入各集群(沿用原内存分组)
+            // 目标按 cluster_code 分组,填入各集群
             var destDict = doc.Destinations.GroupBy(x => x.ClusterCode).ToDictionary(x => x.Key, x => x.ToList());
             doc.Clusters.ForEach(cluster =>
             {
@@ -55,7 +49,9 @@ namespace GatewayServer.AsyncProxyConfig.ConfigHelper.Instances
                 }
             });
 
-            return new ProxyConfigEntity(doc.Routes, doc.Clusters);
+            // 实体 → YARP 映射
+            var mapped = new ProxyConfigEntity(doc.Routes, doc.Clusters);
+            return new ProxyConfigData(mapped.routes, mapped.clusters);
         }
     }
 }

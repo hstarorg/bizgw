@@ -1,4 +1,4 @@
-﻿using GatewayServer.AsyncProxyConfig.ProxyAsyncProvider;
+﻿using GatewayServer.ConfigProvider;
 using GatewayServer.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Yarp.ReverseProxy.Configuration;

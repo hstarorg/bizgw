@@ -33,8 +33,7 @@ fetch("http://server:port/reload", {
 
 数据面 Data Plane（跑流量，高保、多实例）
 
-- GatewayServer 核心服务，网关入口（可部署）
-  - GatewayServer.AsyncProxyConfig 获取远程代理配置项目
+- GatewayServer 核心服务，网关入口（可部署）；内部含异步代理配置 provider（`ConfigHelper/`、`ProxyAsyncProvider/`、`Entities/`，原 `GatewayServer.AsyncProxyConfig` 项目已并入）
   - GatewayServer.Tests 单元测试项目
 
 控制面 Control Plane（管配置，保障级别一般、可单实例）

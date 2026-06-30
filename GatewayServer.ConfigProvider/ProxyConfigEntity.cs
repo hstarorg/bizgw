@@ -1,9 +1,12 @@
-﻿using GatewayServer.Data.Entities;
+using GatewayServer.Data.Entities;
 using Newtonsoft.Json;
 using Yarp.ReverseProxy.Configuration;
 
-namespace GatewayServer.AsyncProxyConfig.Entities
+namespace GatewayServer.ConfigProvider
 {
+    /// <summary>
+    /// 实体 → YARP 配置的映射(DB 后端专用)。把规范化实体翻译成 YARP 的 Route/Cluster 配置。
+    /// </summary>
     public class ProxyConfigEntity
     {
         public ProxyConfigEntity(List<RouteEntity> routes, List<ClusterEntity> clusters)

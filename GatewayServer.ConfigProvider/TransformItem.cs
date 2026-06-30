@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
-namespace GatewayServer.AsyncProxyConfig.Entities
+namespace GatewayServer.ConfigProvider
 {
     public class TransformItem
     {

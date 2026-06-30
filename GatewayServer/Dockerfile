@@ -6,7 +6,7 @@ WORKDIR /src
 
 # Restore first (copy only csproj files so this layer is cached unless deps change)
 COPY ["GatewayServer/GatewayServer.csproj", "GatewayServer/"]
-COPY ["GatewayServer.AsyncProxyConfig/GatewayServer.AsyncProxyConfig.csproj", "GatewayServer.AsyncProxyConfig/"]
+COPY ["GatewayServer.ConfigProvider/GatewayServer.ConfigProvider.csproj", "GatewayServer.ConfigProvider/"]
 COPY ["GatewayServer.Data/GatewayServer.Data.csproj", "GatewayServer.Data/"]
 RUN dotnet restore "GatewayServer/GatewayServer.csproj"
 

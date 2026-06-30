@@ -1,20 +1,18 @@
 using GatewayServer;
-using GatewayServer.AsyncProxyConfig.ConfigHelper;
-using GatewayServer.AsyncProxyConfig.ProxyAsyncProvider;
-using GatewayServer.Data;
+using GatewayServer.ConfigProvider;
 using GatewayServer.Middlewares;
 using GatewayServer.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddLogging();
-// 注册数据访问（GatewayDbContext 工厂，PostgreSQL）
-builder.Services.AddGatewayData(builder.Configuration);
+// 注册配置 provider（数据访问 + 拉源，host 不直接依赖 Data）
+builder.Services.AddConfigProvider(builder.Configuration);
 // 注册 controllers
 builder.Services.AddControllers();
 // 获取代理配置（从异步 Provider 加载，而非 appsettings）
 //builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-builder.Services.AddReverseProxy().LoadFromAsyncProvider(AsyncConfigHelperType.DB, (succeed, ex) =>
+builder.Services.AddReverseProxy().LoadFromAsyncProvider((succeed, ex) =>
 {
     if (succeed)
     {
