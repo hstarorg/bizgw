@@ -1,6 +1,6 @@
 ﻿namespace GatewayServer.ConfigrationAPI.DAL
 {
-    public class ClusterDal : DataAccessBase
+    public class ClusterDal
     {
         public IList<string> QueryClustersAsync()
         {

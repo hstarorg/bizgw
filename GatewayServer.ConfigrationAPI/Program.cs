@@ -1,3 +1,4 @@
+using GatewayServer.AsyncProxyConfig.Data;
 using GatewayServer.ConfigrationAPI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,10 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+// 注册数据访问（与网关共用 GatewayDbContext）
+builder.Services.AddGatewayData(builder.Configuration);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// ע�� dal �� bll
+// 注册 dal 和 bll
 builder.Services.UseDalAndBlls();
 
 var app = builder.Build();

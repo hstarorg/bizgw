@@ -9,8 +9,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="SqlSugarCore" Version="5.1.4.215" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GatewayServer.AsyncProxyConfig\GatewayServer.AsyncProxyConfig.csproj" />
   </ItemGroup>
 
 </Project>

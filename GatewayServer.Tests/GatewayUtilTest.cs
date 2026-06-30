@@ -12,7 +12,7 @@ namespace GatewayServer.Tests
         {
             var rndStr = GatewayUtil.GenerateRandomString();
             Assert.AreEqual(32, rndStr.Length);
-            // 不会有中横线
+            // 涓嶄細鏈変腑妯嚎
             Assert.AreEqual(-1, rndStr.IndexOf("-"));
             Assert.IsTrue(Regex.IsMatch(rndStr, "^[a-zA-Z0-9]+$"));
         }

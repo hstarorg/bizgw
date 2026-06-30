@@ -1,21 +1,19 @@
-﻿using SqlSugar;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GatewayServer.AsyncProxyConfig.Entities
 {
     public class EntityBase
     {
-
-        [SugarColumn(ColumnName = "modifier_name")]
+        [Column("modifier_name")]
         public string ModifierName { get; set; } = "";
 
-
-        [SugarColumn(ColumnName = "modify_date")]
+        [Column("modify_date")]
         public long ModifyDate { get; set; }
 
-        [SugarColumn(ColumnName = "creator_name")]
+        [Column("creator_name")]
         public string CreatorName { get; set; } = "";
 
-        [SugarColumn(ColumnName = "create_date")]
+        [Column("create_date")]
         public long CreateDate { get; set; }
     }
 }

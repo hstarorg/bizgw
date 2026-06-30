@@ -1,8 +1,9 @@
-﻿using SqlSugar;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GatewayServer.AsyncProxyConfig.Entities
 {
-    [SugarTable("cluster")]
+    [Table("cluster")]
     public class ClusterEntity : EntityBase
     {
         public ClusterEntity()
@@ -10,44 +11,49 @@ namespace GatewayServer.AsyncProxyConfig.Entities
             this.ClusterDestinations = new List<ClusterDestinationEntity>();
         }
 
-        [SugarColumn(ColumnName = "id", IsPrimaryKey = true, IsIdentity = true)]
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("id")]
         public long Id { get; set; }
 
-        [SugarColumn(ColumnName = "cluster_code")]
+        [Column("cluster_code")]
         public string ClusterCode { get; set; } = "";
 
-        [SugarColumn(ColumnName = "cluster_name")]
+        [Column("cluster_name")]
         public string ClusterName { get; set; } = "";
 
-        [SugarColumn(ColumnName = "load_balancing_policy")]
+        [Column("load_balancing_policy")]
         public string LoadBalancingPolicy { get; set; } = "";
 
         #region 健康检查相关
 
-        [SugarColumn(ColumnName = "enabled_helth_check")]
+        [Column("enabled_helth_check")]
         public short EnabledHelthCheck { get; set; }
 
-        [SugarColumn(ColumnName = "helth_check_interval")]
+        [Column("helth_check_interval")]
         public int HelthCheckInterval { get; set; }
 
-        [SugarColumn(ColumnName = "helth_check_timeout")]
+        [Column("helth_check_timeout")]
         public int HelthCheckTimeout { get; set; }
 
-        [SugarColumn(ColumnName = "helth_check_policy")]
+        [Column("helth_check_policy")]
         public string HelthCheckPolicy { get; set; } = "";
 
-        [SugarColumn(ColumnName = "helth_check_path")]
+        [Column("helth_check_path")]
         public string HelthCheckPath { get; set; } = "";
 
         #endregion
 
-        [SugarColumn(IsIgnore = true)]
+        /// <summary>
+        /// 集群下的目标服务器，非数据库字段，由 DbProxyConfigHelper 按 cluster_code 填充
+        /// </summary>
+        [NotMapped]
         public virtual IList<ClusterDestinationEntity> ClusterDestinations { get; }
 
-        [SugarColumn(ColumnName = "is_deleted")]
+        [Column("is_deleted")]
         public short IsDeleted { get; set; }
 
-        [SugarColumn(ColumnName = "remark")]
+        [Column("remark")]
         public string Remark { get; set; } = "";
     }
 }

@@ -1,5 +1,6 @@
 using GatewayServer;
 using GatewayServer.AsyncProxyConfig.ConfigHelper;
+using GatewayServer.AsyncProxyConfig.Data;
 using GatewayServer.AsyncProxyConfig.ProxyAsyncProvider;
 using GatewayServer.Middlewares;
 using GatewayServer.Utils;
@@ -7,19 +8,21 @@ using GatewayServer.Utils;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddLogging();
-// ����controllers
+// 注册数据访问（GatewayDbContext 工厂，PostgreSQL）
+builder.Services.AddGatewayData(builder.Configuration);
+// 注册 controllers
 builder.Services.AddControllers();
-// ��ȡ�����������
+// 获取代理配置（从异步 Provider 加载，而非 appsettings）
 //builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddReverseProxy().LoadFromAsyncProvider(AsyncConfigHelperType.DB, (succeed, ex) =>
 {
     if (succeed)
     {
-        Console.WriteLine("��ȡ���óɹ�");
+        Console.WriteLine("获取配置成功");
     }
     else
     {
-        Console.WriteLine("��¼��־����������ʧ�� {0}", ex);
+        Console.WriteLine("记录日志，加载配置失败 {0}", ex);
         System.Diagnostics.Process.GetCurrentProcess().Kill();
     }
 });
@@ -28,25 +31,25 @@ var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
 
-// ע�������
+// 注册控制器
 app.MapControllers();
 
-// ��������������
+// 配置跨域
 app.UseCors(builder =>
 {
     builder
-         .AllowAnyOrigin() // �������е� origin
+         .AllowAnyOrigin() // 允许所有的 origin
          .AllowAnyMethod()
          .AllowAnyHeader();
 });
 
 app.UseRouting();
-// ʹ��·�ɶ˵�
+// 使用路由端点
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapReverseProxy((proxyPipeline) =>
     {
-        // ע����־��¼�м��
+        // 注册日志记录中间件
         proxyPipeline.UseLogRequest();
     });
 });

@@ -9,19 +9,15 @@ namespace GatewayServer.AsyncProxyConfig.ProxyAsyncProvider
     {
         public static IReverseProxyBuilder LoadFromAsyncProvider(this IReverseProxyBuilder builder, AsyncConfigHelperType helperType, Action<bool, Exception?> loadCallbackFn)
         {
-            // 简单工厂注册异步配置获取方式
-            IAsyncProxyConfigHelper helperInstance;
+            // 简单工厂注册异步配置获取方式（实例由 DI 构造，以便注入 GatewayDbContext 工厂）
             switch (helperType)
             {
                 case AsyncConfigHelperType.DB:
-                    helperInstance = new DbProxyConfigHelper();
-                    break;
                 default:
-                    helperInstance = new DbProxyConfigHelper();
+                    builder.Services.AddSingleton<IAsyncProxyConfigHelper, DbProxyConfigHelper>();
                     break;
             }
 
-            builder.Services.AddSingleton<IAsyncProxyConfigHelper>(helperInstance!);
             builder.Services.AddSingleton<IProxyConfigProvider>(sp =>
             {
                 var dbProxyConfigProvider = new AsyncProxyConfigProvider(sp.GetService<IAsyncProxyConfigHelper>()!);

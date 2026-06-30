@@ -1,35 +1,38 @@
-﻿using SqlSugar;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GatewayServer.AsyncProxyConfig.Entities
 {
-    [SugarTable("destination")]
+    [Table("destination")]
     public class ClusterDestinationEntity : EntityBase
     {
-        [SugarColumn(ColumnName = "id", IsPrimaryKey = true, IsIdentity = true)]
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("id")]
         public long Id { get; set; }
 
         /// <summary>
         /// 关联的集群
         /// </summary>
-        [SugarColumn(ColumnName = "cluster_code")]
+        [Column("cluster_code")]
         public string ClusterCode { get; set; } = "";
 
         /// <summary>
         /// 匹配地址
         /// </summary>
-        [SugarColumn(ColumnName = "address")]
+        [Column("address")]
         public string Address { get; set; } = "";
 
         /// <summary>
         /// 健康检查地址
         /// </summary>
-        [SugarColumn(ColumnName = "helth_check_path")]
+        [Column("helth_check_path")]
         public string HelthCheckPath { get; set; } = "";
 
-        [SugarColumn(ColumnName = "is_deleted")]
+        [Column("is_deleted")]
         public short IsDeleted { get; set; }
 
-        [SugarColumn(ColumnName = "name")]
+        [Column("name")]
         public string Name { get; set; } = "";
     }
 }
