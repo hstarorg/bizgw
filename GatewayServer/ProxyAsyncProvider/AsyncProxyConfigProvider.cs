@@ -7,11 +7,14 @@ namespace GatewayServer.AsyncProxyConfig.ProxyAsyncProvider
     public class AsyncProxyConfigProvider : IProxyConfigProvider
     {
         private volatile AsyncProxyConfig _config;
-        private readonly IAsyncProxyConfigHelper proxyConfigProvider;
+        private readonly IProxyConfigSource proxyConfigSource;
 
-        public AsyncProxyConfigProvider(IAsyncProxyConfigHelper proxyConfigProvider)
+        /// <summary>本实例当前已应用的配置版本(快照 version,初始 0)。</summary>
+        public long AppliedVersion { get; private set; }
+
+        public AsyncProxyConfigProvider(IProxyConfigSource proxyConfigSource)
         {
-            this.proxyConfigProvider = proxyConfigProvider;
+            this.proxyConfigSource = proxyConfigSource;
             _config = new AsyncProxyConfig(new List<RouteConfig>(), new List<ClusterConfig>());
         }
         public IProxyConfig GetConfig()
@@ -42,13 +45,15 @@ namespace GatewayServer.AsyncProxyConfig.ProxyAsyncProvider
         private async Task<bool> LoadConfigFromDb()
         {
 
-            // 1. 拉取配置数据
-            var proxyConfig = await proxyConfigProvider.GetConfig();
+            // 1. 拉取配置数据(active 快照)及其版本
+            var version = await proxyConfigSource.GetVersionAsync();
+            var proxyConfig = await proxyConfigSource.GetConfigAsync();
 
-            // 2. 启动更新
+            // 2. 原子替换
             var oldConfig = _config;
             // 加载新配置
             _config = new AsyncProxyConfig(proxyConfig.routes, proxyConfig.clusters);
+            AppliedVersion = version;
             // 释放老配置
             oldConfig.SignalChange();
             return true;

@@ -14,8 +14,9 @@ services:
       POSTGRES_DB: gatewaydb
     ports:
       - "5432:5432"
+    # postgres:18 起数据目录改为 /var/lib/postgresql 下的版本化子目录,卷需挂在此处
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d gatewaydb"]
       interval: 10s

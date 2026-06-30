@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace GatewayServer.Data.Entities
 {
@@ -45,9 +46,10 @@ namespace GatewayServer.Data.Entities
         #endregion
 
         /// <summary>
-        /// 集群下的目标服务器，非数据库字段，由 DbProxyConfigHelper 按 cluster_code 填充
+        /// 集群下的目标服务器，非数据库字段，运行时按 cluster_code 填充(快照文档不含此字段)
         /// </summary>
         [NotMapped]
+        [JsonIgnore]
         public virtual IList<ClusterDestinationEntity> ClusterDestinations { get; }
 
         [Column("is_deleted")]

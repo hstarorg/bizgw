@@ -1,4 +1,5 @@
 ﻿using GatewayServer.ControlPlane.BLL;
+using GatewayServer.ControlPlane.Config;
 using GatewayServer.ControlPlane.DAL;
 
 namespace GatewayServer.ControlPlane
@@ -13,6 +14,8 @@ namespace GatewayServer.ControlPlane
             // 注册所有的 BLL
             services.AddScoped<ClusterBll>();
 
+            // 配置发布服务
+            services.AddScoped<ConfigPublishService>();
         }
     }
 }
