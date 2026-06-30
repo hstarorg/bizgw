@@ -13,7 +13,31 @@ namespace GatewayServer.ConfigProvider
         public static IServiceCollection AddConfigProvider(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddGatewayData(configuration);
+
+            // 拉轴(默认 DB)
             services.AddSingleton<IProxyConfigSource, DbConfigSource>();
+
+            // 推轴·订阅侧:按配置 Listeners 注册(默认 Polling;PG 推荐 "PostgresNotify,Polling")
+            var listeners = (configuration["Listeners"] ?? "Polling")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var name in listeners)
+            {
+                switch (name.ToLowerInvariant())
+                {
+                    case "polling":
+                        services.AddSingleton<IConfigChangeListener, PollingChangeListener>();
+                        break;
+                    case "postgresnotify":
+                        services.AddSingleton<IConfigChangeListener, PostgresNotifyChangeListener>();
+                        break;
+                    default:
+                        Console.WriteLine("未知的 Listeners 配置项,忽略: {0}", name);
+                        break;
+                }
+            }
+
+            // 编排器:扇入 listener → 比对版本 → Reload
+            services.AddHostedService<ConfigSyncService>();
             return services;
         }
 
@@ -22,7 +46,8 @@ namespace GatewayServer.ConfigProvider
         /// </summary>
         public static IReverseProxyBuilder LoadFromAsyncProvider(this IReverseProxyBuilder builder, Action<bool, Exception?> loadCallbackFn)
         {
-            builder.Services.AddSingleton<IProxyConfigProvider>(sp =>
+            // 注册具体 provider(编排器要用它读 AppliedVersion + Reload),并暴露为 YARP 的 IProxyConfigProvider
+            builder.Services.AddSingleton<AsyncProxyConfigProvider>(sp =>
             {
                 var provider = new AsyncProxyConfigProvider(sp.GetRequiredService<IProxyConfigSource>());
                 Task.Run(async () =>
@@ -39,6 +64,7 @@ namespace GatewayServer.ConfigProvider
                 });
                 return provider;
             });
+            builder.Services.AddSingleton<IProxyConfigProvider>(sp => sp.GetRequiredService<AsyncProxyConfigProvider>());
 
             return builder;
         }

@@ -92,6 +92,11 @@ namespace GatewayServer.ControlPlane.Config
             await db.SaveChangesAsync();
 
             await tx.CommitAsync();
+
+            // 发布侧(内联,保 ControlPlane 无 YARP):提交后通知数据面,订阅侧 LISTEN 收到即比对 reload。
+            // 仅加速;即使没收到,网关 Polling 也会兜底追平。
+            await db.Database.ExecuteSqlRawAsync("SELECT pg_notify({0}, {1})", ConfigChannel.Name, version.ToString());
+
             return version;
         }
     }
