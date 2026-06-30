@@ -13,6 +13,7 @@ namespace GatewayServer.Data
         public DbSet<ClusterEntity> Clusters => Set<ClusterEntity>();
         public DbSet<ClusterDestinationEntity> Destinations => Set<ClusterDestinationEntity>();
         public DbSet<ConfigSnapshotEntity> ConfigSnapshots => Set<ConfigSnapshotEntity>();
+        public DbSet<InstanceStatusEntity> InstanceStatuses => Set<InstanceStatusEntity>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

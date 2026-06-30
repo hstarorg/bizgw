@@ -38,6 +38,13 @@ namespace GatewayServer.ConfigProvider
 
             // 编排器:扇入 listener → 比对版本 → Reload
             services.AddHostedService<ConfigSyncService>();
+
+            // readiness 探针:DB 可达 + 首次配置已加载(liveness 无需检查,进程存活即可)
+            services.AddHealthChecks().AddCheck<ReadinessHealthCheck>("readiness", tags: ["ready"]);
+
+            // 实例身份 + 心跳上报(写 instance_status,供控制面看集群状态)
+            services.AddSingleton<InstanceIdentity>();
+            services.AddHostedService<InstanceHeartbeatService>();
             return services;
         }
 

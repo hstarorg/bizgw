@@ -2,6 +2,7 @@ using GatewayServer;
 using GatewayServer.ConfigProvider;
 using GatewayServer.Middlewares;
 using GatewayServer.Utils;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,10 @@ var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Pro
 
 // 注册控制器
 app.MapControllers();
+
+// 健康检查:/healthz = liveness(进程存活即可)，/readyz = readiness(DB 可达 + 首次配置已加载)
+app.MapHealthChecks("/healthz", new HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/readyz", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") });
 
 // 配置跨域
 app.UseCors(builder =>
