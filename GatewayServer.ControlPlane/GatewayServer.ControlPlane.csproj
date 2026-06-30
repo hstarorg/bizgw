@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GatewayServer.AsyncProxyConfig\GatewayServer.AsyncProxyConfig.csproj" />
+    <ProjectReference Include="..\GatewayServer.Data\GatewayServer.Data.csproj" />
   </ItemGroup>
 
 </Project>

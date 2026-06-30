@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "GatewayServer.ConfigrationAPI": {
+    "GatewayServer.ControlPlane": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",

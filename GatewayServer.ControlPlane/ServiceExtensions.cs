@@ -1,7 +1,7 @@
-﻿using GatewayServer.ConfigrationAPI.BLL;
-using GatewayServer.ConfigrationAPI.DAL;
+﻿using GatewayServer.ControlPlane.BLL;
+using GatewayServer.ControlPlane.DAL;
 
-namespace GatewayServer.ConfigrationAPI
+namespace GatewayServer.ControlPlane
 {
     public static class ServiceExtensions
     {

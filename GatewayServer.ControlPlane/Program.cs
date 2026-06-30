@@ -1,4 +1,4 @@
-using GatewayServer.ConfigrationAPI;
+using GatewayServer.ControlPlane;
 using GatewayServer.Data;
 
 var builder = WebApplication.CreateBuilder(args);

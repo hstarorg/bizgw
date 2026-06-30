@@ -1,4 +1,4 @@
-﻿namespace GatewayServer.ConfigrationAPI.DAL
+﻿namespace GatewayServer.ControlPlane.DAL
 {
     public class ClusterDal
     {

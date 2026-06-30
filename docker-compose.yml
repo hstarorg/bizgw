@@ -35,10 +35,10 @@ services:
       db:
         condition: service_healthy
 
-  config-api:
+  control-plane:
     build:
       context: .
-      dockerfile: GatewayServer.ConfigrationAPI/Dockerfile
+      dockerfile: GatewayServer.ControlPlane/Dockerfile
     environment:
       ConnectionString: "server=db;port=3306;uid=root;pwd=localDev;database=gatewaydb"
     ports:

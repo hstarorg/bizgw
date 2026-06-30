@@ -1,6 +1,6 @@
-﻿using GatewayServer.ConfigrationAPI.DAL;
+﻿using GatewayServer.ControlPlane.DAL;
 
-namespace GatewayServer.ConfigrationAPI.BLL
+namespace GatewayServer.ControlPlane.BLL
 {
     public class ClusterBll
     {

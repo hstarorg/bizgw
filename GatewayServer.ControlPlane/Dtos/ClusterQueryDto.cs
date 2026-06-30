@@ -1,4 +1,4 @@
-﻿namespace GatewayServer.ConfigrationAPI.Dtos
+﻿namespace GatewayServer.ControlPlane.Dtos
 {
     public class ClusterQueryDto
     {

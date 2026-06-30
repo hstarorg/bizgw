@@ -1,8 +1,8 @@
-using GatewayServer.ConfigrationAPI.BLL;
-using GatewayServer.ConfigrationAPI.Dtos;
+using GatewayServer.ControlPlane.BLL;
+using GatewayServer.ControlPlane.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GatewayServer.ConfigrationAPI.Controllers
+namespace GatewayServer.ControlPlane.Controllers
 {
     [ApiController]
     [Route("api/clusters")]
