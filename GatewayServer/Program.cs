@@ -1,12 +1,15 @@
 using GatewayServer;
 using GatewayServer.ConfigProvider;
 using GatewayServer.Middlewares;
+using GatewayServer.Observability;
 using GatewayServer.Utils;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddLogging();
+// 可观测性（OpenTelemetry，配置开关，默认关闭）
+builder.Services.AddObservability(builder.Configuration, "gateway");
 // 注册配置 provider（数据访问 + 拉源，host 不直接依赖 Data）
 builder.Services.AddConfigProvider(builder.Configuration);
 // 注册 controllers
