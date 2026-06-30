@@ -7,19 +7,19 @@ using GatewayServer.Utils;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddLogging();
-// Ìí¼Ócontrollers
+// ï¿½ï¿½ï¿½ï¿½controllers
 builder.Services.AddControllers();
-// »ñÈ¡·´Ïò´úÀíÅäÖÃ
+// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddReverseProxy().LoadFromAsyncProvider(AsyncConfigHelperType.DB, (succeed, ex) =>
 {
     if (succeed)
     {
-        Console.WriteLine("¶ÁÈ¡ÅäÖÃ³É¹¦");
+        Console.WriteLine("ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ã³É¹ï¿½");
     }
     else
     {
-        Console.WriteLine("¼ÇÂ¼ÈÕÖ¾£¬¼ÓÔØÅäÖÃÊ§°Ü {0}", ex);
+        Console.WriteLine("ï¿½ï¿½Â¼ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½ {0}", ex);
         System.Diagnostics.Process.GetCurrentProcess().Kill();
     }
 });
@@ -28,30 +28,30 @@ var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
 
-// ×¢²á¿ØÖÆÆ÷
+// ×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 app.MapControllers();
 
-// ÔÊÐíÍâ²ãÇëÇó¿çÓò
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 app.UseCors(builder =>
 {
     builder
-         .AllowAnyOrigin() // ÔÊÐíËùÓÐµÄ origin
+         .AllowAnyOrigin() // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ origin
          .AllowAnyMethod()
          .AllowAnyHeader();
 });
 
 app.UseRouting();
-// Ê¹ÓÃÂ·ÓÉ¶Ëµã
+// Ê¹ï¿½ï¿½Â·ï¿½É¶Ëµï¿½
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapReverseProxy((proxyPipeline) =>
     {
-        // ×¢²áÈÕÖ¾¼ÇÂ¼ÖÐ¼ä¼þ
+        // ×¢ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Â¼ï¿½Ð¼ï¿½ï¿½
         proxyPipeline.UseLogRequest();
     });
 });
 
-GlobalConfig.AuthCode = Environment.GetEnvironmentVariable("AutCode") ?? GatewayUtil.GenerateRandomString();
+GlobalConfig.AuthCode = Environment.GetEnvironmentVariable("AuthCode") ?? GatewayUtil.GenerateRandomString();
 logger.LogInformation("AuthCode={0}", GlobalConfig.AuthCode);
 
 app.Run();

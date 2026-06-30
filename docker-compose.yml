@@ -1,0 +1,51 @@
+# One-command containerized deployment for local/dev use.
+#   docker compose up -d --build
+#
+# NOTE: the schema in docs/*.sql uses `GO` separators and has no CREATE DATABASE,
+# so it is NOT auto-imported. After the db is up, import it once (clean the GO lines first),
+# e.g. against the `gatewaydb` database created below.
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: localDev
+      MYSQL_DATABASE: gatewaydb
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-plocalDev"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gateway:
+    build:
+      context: .
+      dockerfile: GatewayServer/Dockerfile
+    environment:
+      ConnectionString: "server=db;port=3306;uid=root;pwd=localDev;database=gatewaydb"
+      AuthCode: "change-me-in-prod"
+    ports:
+      - "8889:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  config-api:
+    build:
+      context: .
+      dockerfile: GatewayServer.ConfigrationAPI/Dockerfile
+    environment:
+      ConnectionString: "server=db;port=3306;uid=root;pwd=localDev;database=gatewaydb"
+    ports:
+      - "8890:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

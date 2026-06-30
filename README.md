@@ -1,6 +1,6 @@
 # bizgw
 
-A simple gateway based on Yarp.ReverseProxy
+A simple gateway based on Yarp.ReverseProxy (.NET 9)
 
 ## 如何使用
 
@@ -44,60 +44,44 @@ fetch("http://server:port/reload", {
 
 ### 部署说明
 
-整体推荐采用 `docker` 镜像化部署，其中 GatewayServer 需要外网，另外的项目（WebAPI 和 UI）建议仅部署在内网。
+本项目基于 **.NET 9**，推荐采用 `docker` 镜像化部署（支持 Linux）。其中 GatewayServer 需要外网，另外的项目（WebAPI 和 UI）建议仅部署在内网。
+
+> 容器内服务监听 **8080** 端口（.NET 8+ 官方镜像默认的非 root 端口），不再是旧版的 80。
 
 #### 1、安装数据库
 
 首先是初始化 DB（当前使用的是 Mysql），数据库文件在：docs 下，按照日期进行了分类，优先选择最新的日期。
 
-#### 2、构建 GatewayServer
+> 注意：`docs` 下的 SQL 使用了 `GO` 分隔符且不含 `CREATE DATABASE`，导入前需先创建好数据库并去掉 `GO` 行。
 
-> 请注意：请不要勾选单个文件，勾选后的产物无法直接在容器内启动
+#### 2、镜像构建（从源码构建，无需 Visual Studio 发布）
 
-然后利用 `Visual Studio` 发布：
-
-![VS 发布](https://cdn1.hstar.vip/20211211221306.png)
-
-构建好后，可以直接打开文件目录
-
-#### 3、镜像构建
-
-先编写镜像构建文件 `Dockerfile`：
-
-```
-#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
-WORKDIR /app
-EXPOSE 80
-
-FROM base AS final
-WORKDIR /app
-COPY ["./", "/app"]
-ENTRYPOINT ["dotnet", "GatewayServer.dll"]
-```
-
-接着把第二步中的产物和 `Dokerfile` 放在一个目录中，如下：
-
-![构建后文件](https://cdn1.hstar.vip/20211211221435.png)
-
-将整个目录的所有文件拷贝到安装了 `Docker` 的 Linux 服务器上，执行镜像构建：
+各项目的 `Dockerfile` 已是自包含的多阶段构建（restore → publish → 运行）。**构建上下文为解决方案根目录**：
 
 ```bash
-# 如下命令的意思是，基于 Dockerfile 文件，以当前目录构建出镜像 jay/gateway，版本 0.0.1
-docker build -t jay/gateway:0.0.1 .
+# 构建网关镜像
+docker build -f GatewayServer/Dockerfile -t bizgw/gateway:latest .
+
+# 构建管理 API 镜像
+docker build -f GatewayServer.ConfigrationAPI/Dockerfile -t bizgw/config-api:latest .
 ```
 
-#### 4、启动容器
+#### 3、启动容器
 > 请注意：在我们的代码实现中，依赖两个环境变量：
 > 其中 ConnectionString 是必须依赖，用于告诉 Server 连接到那个 DB 去读取代理配置，需要配置为 mysql 连接字符串
 > 其中 AuthCode 是可选依赖，用于在执行 reload 的时候做身份校验。如果没有配置，会自动生成一个 AuthCode（每次重启均会变化，推荐直接用环境变量锁定），需要在日志中去查看
 
-使用如下命令即可启动容器（注意修改你的环境变量）：
-
 ```bash
-# 8889 映射到容器内的 80
-docker run -p 8889:80 -d --name gateway01 -e AuthCode="1234567897854545" -e ConnectionString="server=192.168.31.250;port=3306;uid=root;pwd=localDev;database=gatewaydb" jay/gateway:0.0.1
+# 8889 映射到容器内的 8080
+docker run -p 8889:8080 -d --name gateway01 -e AuthCode="1234567897854545" -e ConnectionString="server=192.168.31.250;port=3306;uid=root;pwd=localDev;database=gatewaydb" bizgw/gateway:latest
 ```
 
 访问 `服务器IP:8889` 即可访问网关服务器。
+
+#### 4、使用 docker compose 一键部署（含 MySQL，便于本地/测试）
+
+```bash
+docker compose up -d --build
+```
+
+该编排会启动 `db`(MySQL) + `gateway`(8889) + `config-api`(8890)。首次启动后需按第 1 步导入数据库表结构。
