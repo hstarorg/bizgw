@@ -1,4 +1,5 @@
 using GatewayServer.ControlPlane.Config;
+using GatewayServer.ControlPlane.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GatewayServer.ControlPlane.Controllers
@@ -8,47 +9,42 @@ namespace GatewayServer.ControlPlane.Controllers
     /// </summary>
     [ApiController]
     [Route("api/config")]
-    public class ConfigController : ControllerBase
+    public class ConfigController(ConfigPublishService publishService) : ControllerBase
     {
-        private readonly ConfigPublishService publishService;
-
-        public ConfigController(ConfigPublishService publishService)
-        {
-            this.publishService = publishService;
-        }
+        private readonly ConfigPublishService publishService = publishService;
 
         /// <summary>当前生效(active)版本。</summary>
         [HttpGet("version")]
         public async Task<object> GetActiveVersion()
         {
             var version = await publishService.GetActiveVersionAsync();
-            return new { ActiveVersion = version };
+            return new { activeVersion = version };
         }
 
         /// <summary>发布当前配置为新的 active 快照。</summary>
         [HttpPost("publish")]
-        public async Task<IActionResult> Publish()
+        public async Task<object> Publish()
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var result = await publishService.PublishAsync(User?.Identity?.Name ?? "anonymous", now);
             if (!result.Success)
             {
-                return UnprocessableEntity(new { result.Success, result.Errors });
+                throw ApiException.Unprocessable("配置校验未通过", new { errors = result.Errors });
             }
-            return Ok(new { result.Success, result.Version });
+            return new { version = result.Version };
         }
 
         /// <summary>回滚到指定历史版本(以新版本号重新发布其内容)。</summary>
         [HttpPost("rollback/{version:long}")]
-        public async Task<IActionResult> Rollback(long version)
+        public async Task<object> Rollback(long version)
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var result = await publishService.RollbackAsync(version, now);
             if (!result.Success)
             {
-                return UnprocessableEntity(new { result.Success, result.Errors });
+                throw ApiException.Unprocessable("回滚失败", new { errors = result.Errors });
             }
-            return Ok(new { result.Success, result.Version });
+            return new { version = result.Version };
         }
     }
 }
