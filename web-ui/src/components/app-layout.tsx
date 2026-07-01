@@ -1,0 +1,54 @@
+import { Outlet, useNavigate } from 'react-router'
+import { LogOut, User } from 'lucide-react'
+import { AppSidebar } from '@/components/app-sidebar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+
+export function AppLayout() {
+  const navigate = useNavigate()
+
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 !h-4" />
+          <span className="text-sm font-medium">网关配置管理</span>
+          <div className="ml-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="focus-visible:ring-ring flex items-center gap-2 rounded-md p-1 outline-none focus-visible:ring-2">
+                <Avatar className="size-8">
+                  <AvatarFallback>
+                    <User className="size-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm">admin</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => navigate('/login')}>
+                  <LogOut />
+                  退出登录
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+        <main className="flex-1 p-6">
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}

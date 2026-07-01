@@ -1,0 +1,44 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="badge" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B74FF" />
+      <stop offset="0.55" stop-color="#5B54E6" />
+      <stop offset="1" stop-color="#3D34B8" />
+    </linearGradient>
+    <radialGradient id="sheen" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+      gradientTransform="translate(150 120) rotate(48) scale(360)">
+      <stop stop-color="#ffffff" stop-opacity="0.35" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="vignette" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+      gradientTransform="translate(430 470) rotate(-135) scale(430)">
+      <stop stop-color="#000000" stop-opacity="0.28" />
+      <stop offset="1" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+    <filter id="glyphShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#1E1B4B" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- squircle badge -->
+  <rect width="512" height="512" rx="116" fill="url(#badge)" />
+  <rect width="512" height="512" rx="116" fill="url(#sheen)" />
+  <rect width="512" height="512" rx="116" fill="url(#vignette)" />
+  <!-- glossy inner rim -->
+  <rect x="3" y="3" width="506" height="506" rx="113" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="3" />
+
+  <!-- gateway glyph: entry gate fans traffic to 3 backends -->
+  <g filter="url(#glyphShadow)" transform="translate(-8 0)">
+    <g stroke="#ffffff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M182 256C300 256 300 152 384 152" />
+      <path d="M182 256H384" />
+      <path d="M182 256C300 256 300 360 384 360" />
+    </g>
+    <rect x="120" y="176" width="52" height="160" rx="26" fill="#ffffff" />
+    <g fill="#ffffff">
+      <circle cx="384" cy="152" r="34" />
+      <circle cx="384" cy="256" r="34" />
+      <circle cx="384" cy="360" r="34" />
+    </g>
+  </g>
+</svg>

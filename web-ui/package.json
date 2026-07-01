@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "gen:icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -15,6 +16,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.22.0",
+    "radix-ui": "^1.6.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.80.0",
@@ -23,6 +25,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.2",
     "@types/node": "^24",
     "@types/react": "^19.2.17",
