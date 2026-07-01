@@ -1,5 +1,7 @@
+using GatewayServer.ControlPlane.Auth;
 using GatewayServer.ControlPlane.Config;
 using GatewayServer.ControlPlane.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GatewayServer.ControlPlane.Controllers
@@ -22,6 +24,7 @@ namespace GatewayServer.ControlPlane.Controllers
         }
 
         /// <summary>发布当前配置为新的 active 快照。</summary>
+        [Authorize(Roles = Roles.Writers)]
         [HttpPost("publish")]
         public async Task<object> Publish()
         {
@@ -35,6 +38,7 @@ namespace GatewayServer.ControlPlane.Controllers
         }
 
         /// <summary>回滚到指定历史版本(以新版本号重新发布其内容)。</summary>
+        [Authorize(Roles = Roles.Writers)]
         [HttpPost("rollback/{version:long}")]
         public async Task<object> Rollback(long version)
         {

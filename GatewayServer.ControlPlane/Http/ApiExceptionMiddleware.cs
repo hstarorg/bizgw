@@ -1,7 +1,3 @@
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Unicode;
-
 namespace GatewayServer.ControlPlane.Http
 {
     /// <summary>
@@ -10,11 +6,6 @@ namespace GatewayServer.ControlPlane.Http
     /// </summary>
     public sealed class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMiddleware> logger)
     {
-        private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
-        {
-            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-        };
-
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -23,22 +14,15 @@ namespace GatewayServer.ControlPlane.Http
             }
             catch (ApiException ex)
             {
-                await WriteAsync(context, ex.StatusCode, ApiResponse.Fail(ex.StatusCode, ex.Message, ex.Details));
+                if (!context.Response.HasStarted) context.Response.Clear();
+                await ApiJson.WriteAsync(context, ex.StatusCode, ApiResponse.Fail(ex.StatusCode, ex.Message, ex.Details));
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "未处理异常");
-                await WriteAsync(context, 500, ApiResponse.Fail(500, "服务器内部错误"));
+                if (!context.Response.HasStarted) context.Response.Clear();
+                await ApiJson.WriteAsync(context, 500, ApiResponse.Fail(500, "服务器内部错误"));
             }
-        }
-
-        private static async Task WriteAsync(HttpContext ctx, int status, ApiResponse body)
-        {
-            if (ctx.Response.HasStarted) return;
-            ctx.Response.Clear();
-            ctx.Response.StatusCode = status;
-            ctx.Response.ContentType = "application/json; charset=utf-8";
-            await ctx.Response.WriteAsync(JsonSerializer.Serialize(body, Json));
         }
     }
 }

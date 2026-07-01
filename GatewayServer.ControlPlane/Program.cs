@@ -1,8 +1,14 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using GatewayServer.ControlPlane;
+using GatewayServer.ControlPlane.Auth;
 using GatewayServer.ControlPlane.Http;
+using GatewayServer.ControlPlane.Services;
 using GatewayServer.Data;
+using GatewayServer.Data.Entities;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +31,32 @@ builder.Services.AddControllers(o => o.Filters.Add<ApiResponseWrapperFilter>())
     });
 // 注册数据访问（与网关共用 GatewayDbContext）
 builder.Services.AddGatewayData(builder.Configuration);
+
+// 认证 / 当前用户 / 口令哈希 / 用户服务
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddSingleton<IPasswordHasher<UserEntity>, PasswordHasher<UserEntity>>();
+builder.Services.AddScoped<UserService>();
+
+// Cookie 认证:未认证/越权对 /api 返回 401/403 信封(不 302 跳转)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(o =>
+    {
+        o.Cookie.Name = "bizgw.auth";
+        o.Cookie.HttpOnly = true;
+        o.Cookie.SameSite = SameSiteMode.Lax;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // 内网 HTTP 也可下发;有 TLS 时自动 Secure
+        o.ExpireTimeSpan = TimeSpan.FromDays(7);
+        o.SlidingExpiration = true;
+        o.Events.OnRedirectToLogin = ctx =>
+            ApiJson.WriteAsync(ctx.Response.HttpContext, 401, ApiResponse.Fail(401, "未登录"));
+        o.Events.OnRedirectToAccessDenied = ctx =>
+            ApiJson.WriteAsync(ctx.Response.HttpContext, 403, ApiResponse.Fail(403, "无权限"));
+    });
+// 默认全需登录;[AllowAnonymous] 放行(status/setup/login + 后续静态壳)
+builder.Services.AddAuthorization(o =>
+    o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -43,6 +75,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

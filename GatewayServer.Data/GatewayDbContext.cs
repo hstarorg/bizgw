@@ -14,6 +14,7 @@ namespace GatewayServer.Data
         public DbSet<ClusterDestinationEntity> Destinations => Set<ClusterDestinationEntity>();
         public DbSet<ConfigSnapshotEntity> ConfigSnapshots => Set<ConfigSnapshotEntity>();
         public DbSet<InstanceStatusEntity> InstanceStatuses => Set<InstanceStatusEntity>();
+        public DbSet<UserEntity> Users => Set<UserEntity>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,6 +28,13 @@ namespace GatewayServer.Data
                 .HasIndex(x => x.IsActive)
                 .IsUnique()
                 .HasFilter("is_active");
+
+            // 用户表：逻辑删除 + username 在未删除范围内唯一
+            modelBuilder.Entity<UserEntity>().HasQueryFilter(x => x.IsDeleted == 0);
+            modelBuilder.Entity<UserEntity>()
+                .HasIndex(x => x.Username)
+                .IsUnique()
+                .HasFilter("is_deleted = 0");
         }
     }
 }
