@@ -59,6 +59,68 @@ namespace GatewayServer.ControlPlane.Services
             return user;
         }
 
+        public async Task<List<UserEntity>> ListAsync()
+        {
+            await using var db = await dbf.CreateDbContextAsync();
+            return await db.Users.AsNoTracking().OrderBy(x => x.Id).ToListAsync();
+        }
+
+        /// <summary>改角色。守卫:不能降级最后一个 Owner。</summary>
+        public async Task UpdateRoleAsync(long id, string role, string byUser)
+        {
+            if (!Roles.IsValid(role)) throw ApiException.BadRequest("非法角色");
+            await using var db = await dbf.CreateDbContextAsync();
+            var user = await db.Users.FirstOrDefaultAsync(x => x.Id == id) ?? throw ApiException.NotFound("用户不存在");
+            if (user.Role == Roles.Owner && role != Roles.Owner && await OwnerCountAsync(db) <= 1)
+                throw ApiException.Conflict("不能降级最后一个 Owner");
+            user.Role = role;
+            Touch(user, byUser);
+            await db.SaveChangesAsync();
+        }
+
+        /// <summary>Owner 重置他人密码。</summary>
+        public async Task ResetPasswordAsync(long id, string newPassword, string byUser)
+        {
+            await using var db = await dbf.CreateDbContextAsync();
+            var user = await db.Users.FirstOrDefaultAsync(x => x.Id == id) ?? throw ApiException.NotFound("用户不存在");
+            user.PasswordHash = hasher.HashPassword(user, newPassword);
+            Touch(user, byUser);
+            await db.SaveChangesAsync();
+        }
+
+        /// <summary>自助改密:校验旧密码。</summary>
+        public async Task ChangeOwnPasswordAsync(string username, string oldPassword, string newPassword)
+        {
+            await using var db = await dbf.CreateDbContextAsync();
+            var user = await db.Users.FirstOrDefaultAsync(x => x.Username == username) ?? throw ApiException.NotFound("用户不存在");
+            if (!VerifyPassword(user, oldPassword)) throw ApiException.BadRequest("旧密码不正确");
+            user.PasswordHash = hasher.HashPassword(user, newPassword);
+            Touch(user, username);
+            await db.SaveChangesAsync();
+        }
+
+        /// <summary>逻辑删除。守卫:不能删自己、不能删最后一个 Owner。</summary>
+        public async Task DeleteAsync(long id, string byUser)
+        {
+            await using var db = await dbf.CreateDbContextAsync();
+            var user = await db.Users.FirstOrDefaultAsync(x => x.Id == id) ?? throw ApiException.NotFound("用户不存在");
+            if (user.Username == byUser) throw ApiException.BadRequest("不能删除自己");
+            if (user.Role == Roles.Owner && await OwnerCountAsync(db) <= 1)
+                throw ApiException.Conflict("不能删除最后一个 Owner");
+            user.IsDeleted = 1;
+            Touch(user, byUser);
+            await db.SaveChangesAsync();
+        }
+
+        private static Task<int> OwnerCountAsync(GatewayDbContext db)
+            => db.Users.CountAsync(x => x.Role == Roles.Owner);
+
+        private static void Touch(UserEntity u, string byUser)
+        {
+            u.ModifierName = byUser;
+            u.ModifyDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+
         /// <summary>用登录 cookie 需要的 Name + Role claim 构建主体。</summary>
         public static ClaimsPrincipal BuildPrincipal(UserEntity user)
         {

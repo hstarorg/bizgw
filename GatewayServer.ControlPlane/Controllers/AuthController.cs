@@ -59,5 +59,13 @@ namespace GatewayServer.ControlPlane.Controllers
 
         [HttpGet("me")]
         public object Me() => new { username = current.Name, role = current.Role };
+
+        /// <summary>自助改密(需旧密码)。</summary>
+        [HttpPost("me/password")]
+        public async Task<object> ChangePassword(ChangePasswordRequest req)
+        {
+            await users.ChangeOwnPasswordAsync(current.Name!, req.OldPassword, req.NewPassword);
+            return new { };
+        }
     }
 }
