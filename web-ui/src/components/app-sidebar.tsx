@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router'
 import { Activity, Boxes, LayoutDashboard, Rocket, Route as RouteIcon, Users } from 'lucide-react'
+import { useAuth } from '@/auth/auth-context'
 import { Logo } from '@/components/logo'
 import {
   Sidebar,
@@ -19,11 +20,13 @@ const items = [
   { title: '集群', url: '/clusters', icon: Boxes },
   { title: '配置发布', url: '/config', icon: Rocket },
   { title: '实例', url: '/instances', icon: Activity },
-  { title: '用户', url: '/users', icon: Users },
+  { title: '用户', url: '/users', icon: Users, ownerOnly: true },
 ]
 
 export function AppSidebar() {
   const { pathname } = useLocation()
+  const { canManage } = useAuth()
+  const visible = items.filter((it) => !it.ownerOnly || canManage)
 
   return (
     <Sidebar>
@@ -40,7 +43,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>管理</SidebarGroupLabel>
           <SidebarMenu>
-            {items.map((item) => {
+            {visible.map((item) => {
               const active = item.url === '/' ? pathname === '/' : pathname.startsWith(item.url)
               return (
                 <SidebarMenuItem key={item.url}>

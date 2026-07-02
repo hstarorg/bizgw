@@ -1,5 +1,385 @@
-import { PagePlaceholder } from '@/components/page-placeholder'
+import { useQuery } from '@tanstack/react-query'
+import { useViewModel } from 'bizify'
+import { Network, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { useAuth } from '@/auth/auth-context'
+import { api } from '@/lib/api'
+import { fmtTime } from '@/lib/format'
+import type { ClusterDto, DestinationDto, Paged } from '@/lib/types'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { ClustersVM } from './vm'
 
 export default function ClustersPage() {
-  return <PagePlaceholder title="集群" description="管理集群与目标（destinations / 健康检查 / 负载策略）" />
+  const vm = useViewModel(ClustersVM)
+  const snap = vm.useSnapshot()
+  const { canWrite } = useAuth()
+
+  const clustersQ = useQuery({
+    queryKey: ['clusters', snap.page, snap.size, snap.keyword],
+    queryFn: () =>
+      api.get<Paged<ClusterDto>>(
+        `/clusters?page=${snap.page}&size=${snap.size}&keyword=${encodeURIComponent(snap.keyword)}`,
+      ),
+  })
+  const destsQ = useQuery({
+    queryKey: ['destinations', snap.destCluster],
+    queryFn: () => api.get<DestinationDto[]>(`/clusters/${snap.destCluster}/destinations`),
+    enabled: !!snap.destCluster,
+  })
+
+  const totalPages = clustersQ.data ? Math.max(1, Math.ceil(clustersQ.data.total / snap.size)) : 1
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">集群</h2>
+          <p className="text-muted-foreground text-sm">
+            集群与后端目标(destinations);编辑为草稿,发布后生效
+          </p>
+        </div>
+        {canWrite && (
+          <Button onClick={vm.openCreate}>
+            <Plus /> 新建集群
+          </Button>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <div className="relative w-64">
+          <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
+          <Input
+            className="pl-8"
+            placeholder="搜索 code / 名称"
+            value={snap.keywordInput}
+            onChange={(e) => vm.setKeywordInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && vm.search()}
+          />
+        </div>
+        <Button variant="secondary" onClick={vm.search}>
+          搜索
+        </Button>
+      </div>
+
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Code</TableHead>
+              <TableHead>名称</TableHead>
+              <TableHead>负载策略</TableHead>
+              <TableHead>健康检查</TableHead>
+              <TableHead>被路由引用</TableHead>
+              <TableHead>最后修改</TableHead>
+              <TableHead className="w-32 text-right">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clustersQ.isLoading && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-muted-foreground h-24 text-center">
+                  加载中…
+                </TableCell>
+              </TableRow>
+            )}
+            {clustersQ.data?.items.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-muted-foreground h-24 text-center">
+                  暂无集群
+                </TableCell>
+              </TableRow>
+            )}
+            {clustersQ.data?.items.map((c) => (
+              <TableRow key={c.id}>
+                <TableCell className="font-mono font-medium">{c.clusterCode}</TableCell>
+                <TableCell>{c.clusterName || '—'}</TableCell>
+                <TableCell>{c.loadBalancingPolicy || '—'}</TableCell>
+                <TableCell>
+                  {c.enabledHealthCheck ? (
+                    <Badge variant="secondary">{c.healthCheckPath || 'on'}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">关</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {c.usedByRouteCount > 0 ? `${c.usedByRouteCount} 条路由` : '—'}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-xs">
+                  {fmtTime(c.modifyDate)} {c.modifierName}
+                </TableCell>
+                <TableCell className="text-right whitespace-nowrap">
+                  <Button variant="ghost" size="icon" title="管理目标" onClick={() => vm.openDests(c.clusterCode)}>
+                    <Network />
+                  </Button>
+                  {canWrite && (
+                    <>
+                      <Button variant="ghost" size="icon" onClick={() => vm.openEdit(c)}>
+                        <Pencil />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => vm.askDelete(c)}>
+                        <Trash2 className="text-destructive" />
+                      </Button>
+                    </>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="text-muted-foreground flex items-center justify-between text-sm">
+        <span>共 {clustersQ.data?.total ?? 0} 条</span>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={snap.page <= 1} onClick={() => vm.setPage(snap.page - 1)}>
+            上一页
+          </Button>
+          <span>
+            {snap.page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={snap.page >= totalPages}
+            onClick={() => vm.setPage(snap.page + 1)}
+          >
+            下一页
+          </Button>
+        </div>
+      </div>
+
+      {/* 新建 / 编辑集群 */}
+      <Dialog open={snap.dialogOpen} onOpenChange={(o) => !o && vm.closeDialog()}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{snap.editingId == null ? '新建集群' : `编辑集群 ${snap.form.clusterCode}`}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            {snap.editingId == null && (
+              <div className="grid gap-2">
+                <Label htmlFor="clusterCode">Cluster Code(稳定标识,创建后不可改)</Label>
+                <Input
+                  id="clusterCode"
+                  className="font-mono"
+                  value={snap.form.clusterCode}
+                  onChange={(e) => vm.setField('clusterCode', e.target.value)}
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="clusterName">名称</Label>
+                <Input
+                  id="clusterName"
+                  value={snap.form.clusterName}
+                  onChange={(e) => vm.setField('clusterName', e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="lb">负载策略</Label>
+                <Input
+                  id="lb"
+                  placeholder="RoundRobin"
+                  value={snap.form.loadBalancingPolicy}
+                  onChange={(e) => vm.setField('loadBalancingPolicy', e.target.value)}
+                />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={snap.form.enabledHealthCheck}
+                onCheckedChange={(v) => vm.setField('enabledHealthCheck', v === true)}
+              />
+              启用主动健康检查
+            </label>
+            {snap.form.enabledHealthCheck && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>检查路径</Label>
+                  <Input
+                    placeholder="/healthz"
+                    value={snap.form.healthCheckPath}
+                    onChange={(e) => vm.setField('healthCheckPath', e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>策略</Label>
+                  <Input
+                    placeholder="ConsecutiveFailures"
+                    value={snap.form.healthCheckPolicy}
+                    onChange={(e) => vm.setField('healthCheckPolicy', e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>间隔(秒)</Label>
+                  <Input
+                    type="number"
+                    value={snap.form.healthCheckInterval}
+                    onChange={(e) => vm.setField('healthCheckInterval', Number(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>超时(秒)</Label>
+                  <Input
+                    type="number"
+                    value={snap.form.healthCheckTimeout}
+                    onChange={(e) => vm.setField('healthCheckTimeout', Number(e.target.value) || 0)}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="grid gap-2">
+              <Label htmlFor="remark">备注</Label>
+              <Input id="remark" value={snap.form.remark} onChange={(e) => vm.setField('remark', e.target.value)} />
+            </div>
+            {snap.formError && <p className="text-destructive text-sm">{snap.formError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={vm.closeDialog} disabled={snap.saving}>
+              取消
+            </Button>
+            <Button onClick={vm.save} disabled={snap.saving}>
+              {snap.saving ? '保存中…' : '保存'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 目标管理 */}
+      <Dialog open={!!snap.destCluster} onOpenChange={(o) => !o && vm.closeDests()}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>目标管理 — {snap.destCluster}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>地址</TableHead>
+                    <TableHead>名称</TableHead>
+                    <TableHead>健康检查路径</TableHead>
+                    {canWrite && <TableHead className="w-20 text-right">操作</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {destsQ.data?.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-muted-foreground h-16 text-center">
+                        暂无目标
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {destsQ.data?.map((d) => (
+                    <TableRow key={d.id}>
+                      <TableCell className="font-mono text-xs">{d.address}</TableCell>
+                      <TableCell>{d.name || '—'}</TableCell>
+                      <TableCell className="font-mono text-xs">{d.healthCheckPath || '—'}</TableCell>
+                      {canWrite && (
+                        <TableCell className="text-right whitespace-nowrap">
+                          <Button variant="ghost" size="icon" onClick={() => vm.destEdit(d)}>
+                            <Pencil />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => vm.destDelete(d.id)}>
+                            <Trash2 className="text-destructive" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {canWrite && (
+              <div className="space-y-2 rounded-lg border p-3">
+                <p className="text-sm font-medium">{snap.destEditingId == null ? '添加目标' : '编辑目标'}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input
+                    placeholder="http://host:port/"
+                    className="col-span-3 font-mono text-xs"
+                    value={snap.destForm.address}
+                    onChange={(e) => vm.destSetField('address', e.target.value)}
+                  />
+                  <Input
+                    placeholder="名称(可选)"
+                    value={snap.destForm.name}
+                    onChange={(e) => vm.destSetField('name', e.target.value)}
+                  />
+                  <Input
+                    placeholder="健康检查路径(可选)"
+                    className="col-span-2 font-mono text-xs"
+                    value={snap.destForm.healthCheckPath}
+                    onChange={(e) => vm.destSetField('healthCheckPath', e.target.value)}
+                  />
+                </div>
+                {snap.destError && <p className="text-destructive text-sm">{snap.destError}</p>}
+                <div className="flex justify-end gap-2">
+                  {snap.destEditingId != null && (
+                    <Button variant="outline" size="sm" onClick={vm.destResetForm}>
+                      取消编辑
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={vm.destSave} disabled={snap.destSaving}>
+                    {snap.destSaving ? '保存中…' : snap.destEditingId == null ? '添加' : '保存'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除集群确认 */}
+      <AlertDialog open={!!snap.deleteTarget} onOpenChange={(o) => !o && vm.cancelDelete()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除集群</AlertDialogTitle>
+            <AlertDialogDescription>
+              确认删除集群「{snap.deleteTarget?.clusterCode}」?
+              {snap.deleteTarget && snap.deleteTarget.usedByRouteCount > 0 && (
+                <span className="text-destructive block font-medium">
+                  ⚠ 它正被 {snap.deleteTarget.usedByRouteCount} 条路由引用,删除后这些路由将无法通过发布校验。
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={snap.deleting}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={vm.confirmDelete} disabled={snap.deleting}>
+              {snap.deleting ? '删除中…' : '删除'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
 }

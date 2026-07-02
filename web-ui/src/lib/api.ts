@@ -6,6 +6,8 @@ export class ApiError extends Error {
     public status: number,
     public code: number,
     message: string,
+    /** 信封里的 data(如发布 422 的 { errors: string[] }) */
+    public data?: unknown,
   ) {
     super(message)
   }
@@ -37,7 +39,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(401, 401, body?.message ?? '未登录')
   }
   if (!res.ok || !body || body.code !== 0) {
-    throw new ApiError(res.status, body?.code ?? res.status, body?.message ?? '请求失败')
+    throw new ApiError(res.status, body?.code ?? res.status, body?.message ?? '请求失败', body?.data)
   }
   return body.data
 }

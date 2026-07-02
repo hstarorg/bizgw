@@ -6,7 +6,34 @@ A simple gateway based on Yarp.ReverseProxy (.NET 10)
 
 > 大家如果对不想折腾构建打包这些，也可以直接拉取我推送的镜像进行体验：https://hub.docker.com/repository/docker/hstarorg/gateway
 
-待补充...
+### 本地开发启动
+
+前置：.NET 10 SDK、Node 22+ 与 pnpm、一个可用的 PostgreSQL。
+
+数据库连接串统一经环境变量 `ConnectionString` 传入（Npgsql 格式，**不要写进 launchSettings/appsettings 提交到仓库**）：
+
+```bash
+# 按你的库改;Search Path 可选,用于把所有表放进指定 schema
+export ConnectionString="Host=localhost;Port=5432;Username=<user>;Password=<pwd>;Database=<db>;Search Path=bizgw"
+```
+
+```bash
+# 0) 初始化数据库(首次,以及每次迁移变更后)
+psql -h localhost -U <user> -d <db> -c 'CREATE SCHEMA IF NOT EXISTS bizgw;'  # 用了 Search Path 才需要
+dotnet tool install --global dotnet-ef                                       # 首次
+dotnet ef database update --project GatewayServer.Data
+
+# 1) 控制面(管理 API,web-ui 的后端)
+dotnet run --project GatewayServer.ControlPlane --urls http://localhost:5160
+
+# 2) 前端(另开终端;dev server 将 /api 代理到 5160)
+cd web-ui && pnpm install && pnpm dev     # 打开 http://localhost:5173
+
+# 3) (可选)网关数据面,验证发布的配置真实生效
+Listeners="PostgresNotify,Polling" dotnet run --project GatewayServer --urls http://localhost:8088
+```
+
+首次打开 http://localhost:5173 会进入「初始化管理员」页——创建首位 Owner 账户后即可登录管理。
 
 ### 重新加载配置
 
