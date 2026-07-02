@@ -1,46 +1,44 @@
-using GatewayServer.ControlPlane.BLL;
+using GatewayServer.ControlPlane.Auth;
 using GatewayServer.ControlPlane.Dtos;
+using GatewayServer.ControlPlane.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GatewayServer.ControlPlane.Controllers
 {
+    /// <summary>集群 CRUD(读=任意登录,写=Owner/Editor)。</summary>
     [ApiController]
     [Route("api/clusters")]
-    public class ClusterController : ControllerBase
+    public sealed class ClusterController(ClusterService svc) : ControllerBase
     {
-
-        private readonly ILogger<ClusterController> _logger;
-        private readonly ClusterBll clusterBll;
-
-        public ClusterController(ILogger<ClusterController> logger, ClusterBll clusterBll)
-        {
-            _logger = logger;
-            this.clusterBll = clusterBll;
-        }
-
         [HttpGet("")]
-        public IEnumerable<ClusterDto> Query(ClusterQueryDto queryDto)
+        public async Task<object> List(int page = 1, int size = 20, string? keyword = null)
         {
-            return new List<ClusterDto>();
+            var (total, items) = await svc.ListAsync(page, size, keyword);
+            return new { items, total, page, size };
         }
 
-        [HttpGet("{id}")]
-        public ClusterDto GetDetail()
-        {
-            return new ClusterDto();
-        }
+        [HttpGet("{id:long}")]
+        public Task<ClusterDto> Get(long id) => svc.GetAsync(id);
 
-
+        [Authorize(Roles = Roles.Writers)]
         [HttpPost("")]
-        public async Task<bool> CreateCluster(ClusterDto clusterDto)
+        public Task<ClusterDto> Create(ClusterCreateRequest req) => svc.CreateAsync(req);
+
+        [Authorize(Roles = Roles.Writers)]
+        [HttpPut("{id:long}")]
+        public async Task<object> Update(long id, ClusterUpdateRequest req)
         {
-            return await this.clusterBll.DoCreateCluster();
+            await svc.UpdateAsync(id, req);
+            return new { };
         }
 
-        [HttpPut("{id}")]
-        public bool UpdateCluster(ClusterDto clusterDto)
+        [Authorize(Roles = Roles.Writers)]
+        [HttpDelete("{id:long}")]
+        public async Task<object> Delete(long id)
         {
-            return true;
+            await svc.DeleteAsync(id);
+            return new { };
         }
     }
 }
