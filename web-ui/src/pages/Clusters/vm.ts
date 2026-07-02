@@ -4,17 +4,38 @@ import { api, ApiError } from '@/lib/api'
 import { queryClient } from '@/lib/query-client'
 import type { ClusterDto, ClusterUpsert, DestinationDto, DestinationUpsert } from '@/lib/types'
 
-/** YARP 内置负载均衡策略(Yarp.ReverseProxy.LoadBalancing.LoadBalancingPolicies)。 */
-export const LOAD_BALANCING_POLICIES = [
-  'PowerOfTwoChoices', // YARP 默认
-  'RoundRobin',
-  'LeastRequests',
-  'Random',
-  'First',
-] as const
+export type PolicyOption = { value: string; label: string; desc: string }
+
+/** YARP 内置负载均衡策略(value = Yarp.ReverseProxy.LoadBalancing.LoadBalancingPolicies 常量)。 */
+export const LOAD_BALANCING_POLICIES: PolicyOption[] = [
+  {
+    value: 'PowerOfTwoChoices',
+    label: '二选一(YARP 默认)',
+    desc: '随机抽两个目标,转发给并发请求更少的那个;均匀且开销低',
+  },
+  { value: 'RoundRobin', label: '轮询', desc: '按顺序依次分配到各目标' },
+  {
+    value: 'LeastRequests',
+    label: '最少请求',
+    desc: '总是转发给当前并发请求最少的目标;最均匀,遍历所有目标开销稍高',
+  },
+  { value: 'Random', label: '随机', desc: '每次随机挑选一个目标' },
+  { value: 'First', label: '固定首个', desc: '总是使用列表中第一个目标;适合主备(failover 由健康检查摘除)' },
+]
 
 /** YARP 内置主动健康检查策略。 */
-export const HEALTH_CHECK_POLICIES = ['ConsecutiveFailures'] as const
+export const HEALTH_CHECK_POLICIES: PolicyOption[] = [
+  {
+    value: 'ConsecutiveFailures',
+    label: '连续失败判定',
+    desc: '主动探测连续失败达到阈值后,把目标标记为不健康并摘除;探测恢复后重新纳入',
+  },
+]
+
+/** value → 中文 label(找不到时原样返回,兼容旧/自定义值)。 */
+export function policyLabel(options: PolicyOption[], value: string): string {
+  return options.find((o) => o.value === value)?.label ?? value
+}
 
 const emptyForm = (): ClusterUpsert => ({
   clusterCode: '',

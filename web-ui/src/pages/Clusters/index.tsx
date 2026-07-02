@@ -38,11 +38,11 @@ import {
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ClustersVM, HEALTH_CHECK_POLICIES, LOAD_BALANCING_POLICIES } from './vm'
+import { RichSelectItem } from '@/components/rich-select-item'
+import { ClustersVM, HEALTH_CHECK_POLICIES, LOAD_BALANCING_POLICIES, policyLabel } from './vm'
 
 export default function ClustersPage() {
   const vm = useViewModel(ClustersVM)
@@ -140,7 +140,7 @@ export default function ClustersPage() {
                     {c.destinationCount > 0 ? `${c.destinationCount} 个目标` : '无目标,去添加'}
                   </Button>
                 </TableCell>
-                <TableCell>{c.loadBalancingPolicy || '—'}</TableCell>
+                <TableCell>{c.loadBalancingPolicy ? policyLabel(LOAD_BALANCING_POLICIES, c.loadBalancingPolicy) : '—'}</TableCell>
                 <TableCell>
                   {c.enabledHealthCheck ? (
                     <Badge variant="secondary">{c.healthCheckPath || 'on'}</Badge>
@@ -230,9 +230,7 @@ export default function ClustersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {LOAD_BALANCING_POLICIES.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
+                      <RichSelectItem key={p.value} value={p.value} label={p.label} code={p.value} desc={p.desc} />
                     ))}
                   </SelectContent>
                 </Select>
@@ -256,7 +254,7 @@ export default function ClustersPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>策略</Label>
+                  <Label>判定策略</Label>
                   <Select
                     value={snap.form.healthCheckPolicy || undefined}
                     onValueChange={(v) => vm.setField('healthCheckPolicy', v)}
@@ -266,9 +264,7 @@ export default function ClustersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {HEALTH_CHECK_POLICIES.map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {p}
-                        </SelectItem>
+                        <RichSelectItem key={p.value} value={p.value} label={p.label} code={p.value} desc={p.desc} />
                       ))}
                     </SelectContent>
                   </Select>
