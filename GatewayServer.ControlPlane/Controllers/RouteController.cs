@@ -1,42 +1,44 @@
-﻿using GatewayServer.ControlPlane.Dtos;
+using GatewayServer.ControlPlane.Auth;
+using GatewayServer.ControlPlane.Dtos;
+using GatewayServer.ControlPlane.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GatewayServer.ControlPlane.Controllers
 {
+    /// <summary>路由 CRUD(编辑表;读=任意登录,写=Owner/Editor)。</summary>
     [ApiController]
     [Route("api/routes")]
-    public class RouteController : ControllerBase
+    public sealed class RouteController(RouteService svc) : ControllerBase
     {
-        private readonly ILogger<RouteController> _logger;
-
-        public RouteController(ILogger<RouteController> logger)
-        {
-            _logger = logger;
-        }
-
         [HttpGet("")]
-        public IEnumerable<RouteDto> Query(RouteQueryDto queryDto)
+        public async Task<object> List(int page = 1, int size = 20, string? keyword = null)
         {
-            return new List<RouteDto>();
+            var (total, items) = await svc.ListAsync(page, size, keyword);
+            return new { items, total, page, size };
         }
 
-        [HttpGet("{id}")]
-        public RouteDto GetDetail()
-        {
-            return new RouteDto();
-        }
+        [HttpGet("{id:long}")]
+        public Task<RouteDto> Get(long id) => svc.GetAsync(id);
 
-
+        [Authorize(Roles = Roles.Writers)]
         [HttpPost("")]
-        public bool CreateRoute(RouteDto routeDto)
+        public Task<RouteDto> Create(RouteUpsertRequest req) => svc.CreateAsync(req);
+
+        [Authorize(Roles = Roles.Writers)]
+        [HttpPut("{id:long}")]
+        public async Task<object> Update(long id, RouteUpsertRequest req)
         {
-            return true;
+            await svc.UpdateAsync(id, req);
+            return new { };
         }
 
-        [HttpPut("{id}")]
-        public bool UpdateRoute(RouteDto routeDto)
+        [Authorize(Roles = Roles.Writers)]
+        [HttpDelete("{id:long}")]
+        public async Task<object> Delete(long id)
         {
-            return true;
+            await svc.DeleteAsync(id);
+            return new { };
         }
     }
 }

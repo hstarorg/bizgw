@@ -1,19 +1,21 @@
 using GatewayServer.ControlPlane.Auth;
 using GatewayServer.ControlPlane.Config;
 using GatewayServer.ControlPlane.Http;
+using GatewayServer.ControlPlane.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GatewayServer.ControlPlane.Controllers
 {
     /// <summary>
-    /// 配置发布/回滚:把规范化编辑配置编译成版本化快照供数据面消费。
+    /// 配置发布/回滚/查询:把规范化编辑配置编译成版本化快照供数据面消费。
     /// </summary>
     [ApiController]
     [Route("api/config")]
-    public class ConfigController(ConfigPublishService publishService) : ControllerBase
+    public class ConfigController(ConfigPublishService publishService, ConfigQueryService queryService) : ControllerBase
     {
         private readonly ConfigPublishService publishService = publishService;
+        private readonly ConfigQueryService queryService = queryService;
 
         /// <summary>当前生效(active)版本。</summary>
         [HttpGet("version")]
@@ -21,6 +23,18 @@ namespace GatewayServer.ControlPlane.Controllers
         {
             var version = await publishService.GetActiveVersionAsync();
             return new { activeVersion = version };
+        }
+
+        /// <summary>快照历史(供发布/回滚 UI)。</summary>
+        [HttpGet("snapshots")]
+        public Task<List<object>> Snapshots() => queryService.ListSnapshotsAsync();
+
+        /// <summary>是否有未发布的草稿改动。</summary>
+        [HttpGet("draft-status")]
+        public async Task<object> DraftStatus()
+        {
+            var pending = await queryService.HasPendingChangesAsync();
+            return new { hasPendingChanges = pending };
         }
 
         /// <summary>发布当前配置为新的 active 快照。</summary>
