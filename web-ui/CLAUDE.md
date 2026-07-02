@@ -13,3 +13,9 @@
 原因:保持这些组件可被 CLI 重新生成 / 升级、跨组件一致;手改会在下次 `shadcn add` 或升级时被覆盖或冲突。
 
 例外(不算「手改」):shadcn CLI 自身写入 `ui/`、以及 `add` 时向 `src/index.css` 注入所需 CSS 变量。
+
+## 约定:`src/pages/` 目录结构
+
+- **一页一目录**,目录名 **大驼峰(PascalCase)**,页面组件为其中的 `index.tsx`(default export)。例:`pages/Routes/index.tsx`、`pages/Login/index.tsx`。
+- **页面组**(含多个子页面的分组)用 **全小写**目录,页面仍是其下的大驼峰子目录。例:`pages/settings/Profile/index.tsx`、`pages/settings/Members/index.tsx`。
+- 引用用 `@/pages/Xxx`(解析到 `index.tsx`)。

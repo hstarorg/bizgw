@@ -1,5 +1,6 @@
 import { Outlet, useNavigate } from 'react-router'
 import { LogOut, User } from 'lucide-react'
+import { useAuth } from '@/auth/auth-context'
 import { AppSidebar } from '@/components/app-sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
@@ -15,6 +16,12 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 
 export function AppLayout() {
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
+
+  async function onLogout() {
+    await logout()
+    navigate('/login')
+  }
 
   return (
     <SidebarProvider>
@@ -32,12 +39,17 @@ export function AppLayout() {
                     <User className="size-4" />
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm">admin</span>
+                <span className="text-sm">{user?.username ?? '—'}</span>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuLabel>
+                  <div className="grid">
+                    <span>{user?.username}</span>
+                    <span className="text-muted-foreground text-xs font-normal">{user?.role}</span>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => navigate('/login')}>
+                <DropdownMenuItem onSelect={onLogout}>
                   <LogOut />
                   退出登录
                 </DropdownMenuItem>
