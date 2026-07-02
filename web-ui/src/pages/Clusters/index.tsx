@@ -22,11 +22,11 @@ import {
 } from '@/components/ui/alert-dialog'
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { FormDialogContent } from '@/components/form-dialog-content'
 import {
   Table,
   TableBody,
@@ -35,7 +35,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ClustersVM } from './vm'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ClustersVM, HEALTH_CHECK_POLICIES, LOAD_BALANCING_POLICIES } from './vm'
 
 export default function ClustersPage() {
   const vm = useViewModel(ClustersVM)
@@ -61,14 +68,14 @@ export default function ClustersPage() {
     <div className="space-y-4">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">集群</h2>
+          <h2 className="text-xl font-semibold tracking-tight">目标组</h2>
           <p className="text-muted-foreground text-sm">
-            集群与后端目标(destinations);编辑为草稿,发布后生效
+            目标组(YARP Cluster):一组转发目标 + 负载策略 + 健康检查;编辑为草稿,发布后生效
           </p>
         </div>
         {canWrite && (
           <Button onClick={vm.openCreate}>
-            <Plus /> 新建集群
+            <Plus /> 新建目标组
           </Button>
         )}
       </div>
@@ -95,25 +102,26 @@ export default function ClustersPage() {
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>名称</TableHead>
+              <TableHead>转发目标</TableHead>
               <TableHead>负载策略</TableHead>
               <TableHead>健康检查</TableHead>
               <TableHead>被路由引用</TableHead>
               <TableHead>最后修改</TableHead>
-              <TableHead className="w-32 text-right">操作</TableHead>
+              <TableHead className="w-24 text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {clustersQ.isLoading && (
               <TableRow>
-                <TableCell colSpan={7} className="text-muted-foreground h-24 text-center">
+                <TableCell colSpan={8} className="text-muted-foreground h-24 text-center">
                   加载中…
                 </TableCell>
               </TableRow>
             )}
             {clustersQ.data?.items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-muted-foreground h-24 text-center">
-                  暂无集群
+                <TableCell colSpan={8} className="text-muted-foreground h-24 text-center">
+                  暂无目标组
                 </TableCell>
               </TableRow>
             )}
@@ -121,6 +129,17 @@ export default function ClustersPage() {
               <TableRow key={c.id}>
                 <TableCell className="font-mono font-medium">{c.clusterCode}</TableCell>
                 <TableCell>{c.clusterName || '—'}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className={`h-auto p-0 ${c.destinationCount === 0 ? 'text-destructive' : ''}`}
+                    onClick={() => vm.openDests(c.clusterCode)}
+                  >
+                    <Network className="size-3.5" />
+                    {c.destinationCount > 0 ? `${c.destinationCount} 个目标` : '无目标,去添加'}
+                  </Button>
+                </TableCell>
                 <TableCell>{c.loadBalancingPolicy || '—'}</TableCell>
                 <TableCell>
                   {c.enabledHealthCheck ? (
@@ -136,9 +155,6 @@ export default function ClustersPage() {
                   {fmtTime(c.modifyDate)} {c.modifierName}
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
-                  <Button variant="ghost" size="icon" title="管理目标" onClick={() => vm.openDests(c.clusterCode)}>
-                    <Network />
-                  </Button>
                   {canWrite && (
                     <>
                       <Button variant="ghost" size="icon" onClick={() => vm.openEdit(c)}>
@@ -176,16 +192,16 @@ export default function ClustersPage() {
         </div>
       </div>
 
-      {/* 新建 / 编辑集群 */}
+      {/* 新建 / 编辑目标组 */}
       <Dialog open={snap.dialogOpen} onOpenChange={(o) => !o && vm.closeDialog()}>
-        <DialogContent className="sm:max-w-lg">
+        <FormDialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{snap.editingId == null ? '新建集群' : `编辑集群 ${snap.form.clusterCode}`}</DialogTitle>
+            <DialogTitle>{snap.editingId == null ? '新建目标组' : `编辑目标组 ${snap.form.clusterCode}`}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4">
             {snap.editingId == null && (
               <div className="grid gap-2">
-                <Label htmlFor="clusterCode">Cluster Code(稳定标识,创建后不可改)</Label>
+                <Label htmlFor="clusterCode">组标识 Code(创建后不可改;路由/目标经它关联)</Label>
                 <Input
                   id="clusterCode"
                   className="font-mono"
@@ -204,13 +220,22 @@ export default function ClustersPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="lb">负载策略</Label>
-                <Input
-                  id="lb"
-                  placeholder="RoundRobin"
-                  value={snap.form.loadBalancingPolicy}
-                  onChange={(e) => vm.setField('loadBalancingPolicy', e.target.value)}
-                />
+                <Label>负载策略</Label>
+                <Select
+                  value={snap.form.loadBalancingPolicy || undefined}
+                  onValueChange={(v) => vm.setField('loadBalancingPolicy', v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择策略" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOAD_BALANCING_POLICIES.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm">
@@ -232,11 +257,21 @@ export default function ClustersPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label>策略</Label>
-                  <Input
-                    placeholder="ConsecutiveFailures"
-                    value={snap.form.healthCheckPolicy}
-                    onChange={(e) => vm.setField('healthCheckPolicy', e.target.value)}
-                  />
+                  <Select
+                    value={snap.form.healthCheckPolicy || undefined}
+                    onValueChange={(v) => vm.setField('healthCheckPolicy', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择策略" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HEALTH_CHECK_POLICIES.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label>间隔(秒)</Label>
@@ -270,12 +305,12 @@ export default function ClustersPage() {
               {snap.saving ? '保存中…' : '保存'}
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </FormDialogContent>
       </Dialog>
 
       {/* 目标管理 */}
       <Dialog open={!!snap.destCluster} onOpenChange={(o) => !o && vm.closeDests()}>
-        <DialogContent className="sm:max-w-xl">
+        <FormDialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>目标管理 — {snap.destCluster}</DialogTitle>
           </DialogHeader>
@@ -355,16 +390,16 @@ export default function ClustersPage() {
               </div>
             )}
           </div>
-        </DialogContent>
+        </FormDialogContent>
       </Dialog>
 
-      {/* 删除集群确认 */}
+      {/* 删除目标组确认 */}
       <AlertDialog open={!!snap.deleteTarget} onOpenChange={(o) => !o && vm.cancelDelete()}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除集群</AlertDialogTitle>
+            <AlertDialogTitle>删除目标组</AlertDialogTitle>
             <AlertDialogDescription>
-              确认删除集群「{snap.deleteTarget?.clusterCode}」?
+              确认删除目标组「{snap.deleteTarget?.clusterCode}」?
               {snap.deleteTarget && snap.deleteTarget.usedByRouteCount > 0 && (
                 <span className="text-destructive block font-medium">
                   ⚠ 它正被 {snap.deleteTarget.usedByRouteCount} 条路由引用,删除后这些路由将无法通过发布校验。

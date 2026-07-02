@@ -22,11 +22,11 @@ import {
 } from '@/components/ui/alert-dialog'
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { FormDialogContent } from '@/components/form-dialog-content'
 import {
   Select,
   SelectContent,
@@ -145,7 +145,7 @@ export default function UsersPage() {
 
       {/* 新建用户 */}
       <Dialog open={snap.createOpen} onOpenChange={(o) => !o && vm.closeCreate()}>
-        <DialogContent className="sm:max-w-sm">
+        <FormDialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>新建用户</DialogTitle>
           </DialogHeader>
@@ -188,12 +188,12 @@ export default function UsersPage() {
               {snap.saving ? '创建中…' : '创建'}
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </FormDialogContent>
       </Dialog>
 
       {/* 重置密码 */}
       <Dialog open={!!snap.resetTarget} onOpenChange={(o) => !o && vm.cancelReset()}>
-        <DialogContent className="sm:max-w-sm">
+        <FormDialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>重置密码 — {snap.resetTarget?.username}</DialogTitle>
           </DialogHeader>
@@ -215,7 +215,7 @@ export default function UsersPage() {
               {snap.resetting ? '重置中…' : '重置'}
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </FormDialogContent>
       </Dialog>
 
       {/* 删除用户 */}

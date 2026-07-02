@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useViewModel } from 'bizify'
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/auth/auth-context'
 import { api } from '@/lib/api'
 import { fmtTime } from '@/lib/format'
-import type { ClusterDto, Paged, RouteDto } from '@/lib/types'
+import type { ClusterDto, DestinationDto, Paged, RouteDto } from '@/lib/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -23,11 +23,11 @@ import {
 } from '@/components/ui/alert-dialog'
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { FormDialogContent } from '@/components/form-dialog-content'
 import {
   Select,
   SelectContent,
@@ -44,6 +44,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { HTTP_METHODS, RoutesVM } from './vm'
+import { previewTransforms, TRANSFORM_TYPES, typeDef } from './transforms'
 
 export default function RoutesPage() {
   const vm = useViewModel(RoutesVM)
@@ -61,6 +62,12 @@ export default function RoutesPage() {
   const clustersQ = useQuery({
     queryKey: ['clusters', 'options'],
     queryFn: () => api.get<Paged<ClusterDto>>('/clusters?page=1&size=200'),
+  })
+  // 弹窗内选中目标组后,展示其转发目标(让人知道流量最终去哪)
+  const dialogDestsQ = useQuery({
+    queryKey: ['destinations', snap.form.clusterCode],
+    queryFn: () => api.get<DestinationDto[]>(`/clusters/${snap.form.clusterCode}/destinations`),
+    enabled: snap.dialogOpen && !!snap.form.clusterCode,
   })
 
   const totalPages = routesQ.data ? Math.max(1, Math.ceil(routesQ.data.total / snap.size)) : 1
@@ -86,7 +93,7 @@ export default function RoutesPage() {
           <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
           <Input
             className="pl-8"
-            placeholder="搜索 名称 / 路径 / 集群"
+            placeholder="搜索 名称 / 路径 / 目标组"
             value={snap.keywordInput}
             onChange={(e) => vm.setKeywordInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && vm.search()}
@@ -104,7 +111,7 @@ export default function RoutesPage() {
               <TableHead>名称</TableHead>
               <TableHead>匹配路径</TableHead>
               <TableHead>Methods</TableHead>
-              <TableHead>集群</TableHead>
+              <TableHead>目标组</TableHead>
               <TableHead>最后修改</TableHead>
               {canWrite && <TableHead className="w-24 text-right">操作</TableHead>}
             </TableRow>
@@ -195,7 +202,7 @@ export default function RoutesPage() {
 
       {/* 新建 / 编辑 */}
       <Dialog open={snap.dialogOpen} onOpenChange={(o) => !o && vm.closeDialog()}>
-        <DialogContent className="sm:max-w-lg">
+        <FormDialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{snap.editingId == null ? '新建路由' : '编辑路由'}</DialogTitle>
           </DialogHeader>
@@ -209,13 +216,13 @@ export default function RoutesPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>集群</Label>
+              <Label>目标组</Label>
               <Select
                 value={snap.form.clusterCode || undefined}
                 onValueChange={(v) => vm.setField('clusterCode', v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择集群" />
+                  <SelectValue placeholder="选择目标组" />
                 </SelectTrigger>
                 <SelectContent>
                   {clustersQ.data?.items.map((c) => (
@@ -226,6 +233,20 @@ export default function RoutesPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {snap.form.clusterCode && dialogDestsQ.data && (
+                dialogDestsQ.data.length > 0 ? (
+                  <div className="text-muted-foreground text-xs">
+                    转发目标:
+                    <span className="ml-1 font-mono">
+                      {dialogDestsQ.data.map((d) => d.address).join('、')}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-destructive text-xs">
+                    ⚠ 该目标组还没有转发目标,请先到「目标组」页为它添加目标,否则发布后无法转发
+                  </p>
+                )
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="matchPath">匹配路径</Label>
@@ -252,14 +273,115 @@ export default function RoutesPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="transforms">Transforms(JSON 数组)</Label>
-              <Textarea
-                id="transforms"
-                rows={3}
-                className="font-mono text-xs"
-                value={snap.form.transforms}
-                onChange={(e) => vm.setField('transforms', e.target.value)}
-              />
+              <Label>请求/响应改写(Transforms,按序生效)</Label>
+              <div className="space-y-2">
+                {snap.transforms.length === 0 && (
+                  <p className="text-muted-foreground text-xs">
+                    未配置改写规则,请求将原样转发(常见需求:上游不认识路由前缀时用「去除路径前缀」)
+                  </p>
+                )}
+                {snap.transforms.map((t, i) => {
+                  const def = typeDef(t.type)
+                  return (
+                    <div key={t.id} className="space-y-2 rounded-md border p-2">
+                      <div className="flex items-center gap-2">
+                        <Select value={t.type} onValueChange={(v) => vm.setTransformType(t.id, v)}>
+                          <SelectTrigger className="h-8 w-44">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TRANSFORM_TYPES.map((tt) => (
+                              <SelectItem key={tt.value} value={tt.value}>
+                                {tt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="ml-auto flex items-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7"
+                            disabled={i === 0}
+                            onClick={() => vm.moveTransform(t.id, -1)}
+                          >
+                            <ChevronUp />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7"
+                            disabled={i === snap.transforms.length - 1}
+                            onClick={() => vm.moveTransform(t.id, 1)}
+                          >
+                            <ChevronDown />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7"
+                            onClick={() => vm.removeTransform(t.id)}
+                          >
+                            <X className="text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {def.fields.map((f) =>
+                          f.kind === 'select' ? (
+                            <Select
+                              key={f.name}
+                              value={t.params[f.name] || f.options?.[0]}
+                              onValueChange={(v) => vm.setTransformParam(t.id, f.name, v)}
+                            >
+                              <SelectTrigger className="h-8 w-28" title={f.label}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {f.options?.map((o) => (
+                                  <SelectItem key={o} value={o}>
+                                    {o}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : f.kind === 'json' ? (
+                            <Textarea
+                              key={f.name}
+                              rows={2}
+                              className="w-full font-mono text-xs"
+                              placeholder={f.placeholder}
+                              value={t.params[f.name] ?? ''}
+                              onChange={(e) => vm.setTransformParam(t.id, f.name, e.target.value)}
+                            />
+                          ) : (
+                            <Input
+                              key={f.name}
+                              className="h-8 min-w-32 flex-1 font-mono text-xs"
+                              placeholder={`${f.label} 如 ${f.placeholder ?? ''}`}
+                              value={t.params[f.name] ?? ''}
+                              onChange={(e) => vm.setTransformParam(t.id, f.name, e.target.value)}
+                            />
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" size="sm" onClick={vm.addTransform}>
+                    <Plus /> 添加改写规则
+                  </Button>
+                  {snap.transforms.length > 0 && (
+                    <details className="text-muted-foreground text-xs">
+                      <summary className="cursor-pointer select-none">JSON 预览</summary>
+                      <pre className="bg-muted mt-1 max-h-40 overflow-auto rounded p-2">
+                        {previewTransforms(snap.transforms)}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="remark">备注</Label>
@@ -279,7 +401,7 @@ export default function RoutesPage() {
               {snap.saving ? '保存中…' : '保存'}
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </FormDialogContent>
       </Dialog>
 
       {/* 删除确认 */}

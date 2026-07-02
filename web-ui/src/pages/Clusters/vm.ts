@@ -4,6 +4,18 @@ import { api, ApiError } from '@/lib/api'
 import { queryClient } from '@/lib/query-client'
 import type { ClusterDto, ClusterUpsert, DestinationDto, DestinationUpsert } from '@/lib/types'
 
+/** YARP 内置负载均衡策略(Yarp.ReverseProxy.LoadBalancing.LoadBalancingPolicies)。 */
+export const LOAD_BALANCING_POLICIES = [
+  'PowerOfTwoChoices', // YARP 默认
+  'RoundRobin',
+  'LeastRequests',
+  'Random',
+  'First',
+] as const
+
+/** YARP 内置主动健康检查策略。 */
+export const HEALTH_CHECK_POLICIES = ['ConsecutiveFailures'] as const
+
 const emptyForm = (): ClusterUpsert => ({
   clusterCode: '',
   clusterName: '',
@@ -11,7 +23,7 @@ const emptyForm = (): ClusterUpsert => ({
   enabledHealthCheck: false,
   healthCheckInterval: 15,
   healthCheckTimeout: 5,
-  healthCheckPolicy: '',
+  healthCheckPolicy: 'ConsecutiveFailures',
   healthCheckPath: '',
   remark: '',
 })
@@ -23,7 +35,7 @@ type ClustersState = {
   size: number
   keyword: string
   keywordInput: string
-  // 集群编辑弹窗
+  // 目标组编辑弹窗
   dialogOpen: boolean
   editingId: number | null
   form: ClusterUpsert
@@ -79,7 +91,7 @@ export class ClustersVM extends ViewModelBase<ClustersState> {
     this.data.page = p
   }
 
-  // ---- 集群编辑 ----
+  // ---- 目标组编辑 ----
   openCreate() {
     this.data.form = emptyForm()
     this.data.editingId = null
@@ -91,11 +103,12 @@ export class ClustersVM extends ViewModelBase<ClustersState> {
     this.data.form = {
       clusterCode: c.clusterCode,
       clusterName: c.clusterName,
-      loadBalancingPolicy: c.loadBalancingPolicy,
+      // 旧数据可能为空串:兜底到 YARP 默认,下拉才有可选中的值
+      loadBalancingPolicy: c.loadBalancingPolicy || 'PowerOfTwoChoices',
       enabledHealthCheck: c.enabledHealthCheck,
       healthCheckInterval: c.healthCheckInterval,
       healthCheckTimeout: c.healthCheckTimeout,
-      healthCheckPolicy: c.healthCheckPolicy,
+      healthCheckPolicy: c.healthCheckPolicy || 'ConsecutiveFailures',
       healthCheckPath: c.healthCheckPath,
       remark: c.remark,
     }
@@ -115,7 +128,7 @@ export class ClustersVM extends ViewModelBase<ClustersState> {
   async save() {
     const { form, editingId } = this.data
     if (editingId == null && !form.clusterCode.trim())
-      return void (this.data.formError = '请填写 cluster_code(创建后不可改)')
+      return void (this.data.formError = '请填写组标识 Code(创建后不可改)')
 
     this.data.saving = true
     this.data.formError = ''
@@ -125,7 +138,7 @@ export class ClustersVM extends ViewModelBase<ClustersState> {
       this.invalidate()
       if (this.$disposed) return
       this.data.dialogOpen = false
-      toast.success(editingId == null ? '集群已创建' : '集群已保存')
+      toast.success(editingId == null ? '目标组已创建' : '目标组已保存')
     } catch (err) {
       if (this.$disposed) return
       this.data.formError = err instanceof ApiError ? err.message : '保存失败'
@@ -149,7 +162,7 @@ export class ClustersVM extends ViewModelBase<ClustersState> {
     try {
       await api.del(`/clusters/${target.id}`)
       this.invalidate()
-      toast.success(`已删除集群「${target.clusterCode}」`)
+      toast.success(`已删除目标组「${target.clusterCode}」`)
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : '删除失败')
     } finally {

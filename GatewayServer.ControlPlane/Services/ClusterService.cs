@@ -23,8 +23,12 @@ namespace GatewayServer.ControlPlane.Services
             var total = await q.CountAsync();
             var rows = await q.OrderByDescending(x => x.Id).Skip((page - 1) * size).Take(size).ToListAsync();
 
-            var counts = await RouteCountsAsync(db, rows.Select(r => r.ClusterCode));
-            return (total, rows.Select(r => ToDto(r, counts.GetValueOrDefault(r.ClusterCode))).ToList());
+            var codes = rows.Select(r => r.ClusterCode).ToList();
+            var routeCounts = await RouteCountsAsync(db, codes);
+            var destCounts = await DestinationCountsAsync(db, codes);
+            return (total, rows.Select(r => ToDto(r,
+                routeCounts.GetValueOrDefault(r.ClusterCode),
+                destCounts.GetValueOrDefault(r.ClusterCode))).ToList());
         }
 
         public async Task<ClusterDto> GetAsync(long id)
@@ -33,7 +37,8 @@ namespace GatewayServer.ControlPlane.Services
             var row = await db.Clusters.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id)
                 ?? throw ApiException.NotFound("集群不存在");
             var used = await db.Routes.CountAsync(x => x.ClusterCode == row.ClusterCode);
-            return ToDto(row, used);
+            var dests = await db.Destinations.CountAsync(x => x.ClusterCode == row.ClusterCode);
+            return ToDto(row, used, dests);
         }
 
         public async Task<ClusterDto> CreateAsync(ClusterCreateRequest req)
@@ -49,7 +54,7 @@ namespace GatewayServer.ControlPlane.Services
             row.ModifyDate = now;
             db.Clusters.Add(row);
             await db.SaveChangesAsync();
-            return ToDto(row, 0);
+            return ToDto(row, 0, 0);
         }
 
         public async Task UpdateAsync(long id, ClusterUpdateRequest req)
@@ -85,6 +90,15 @@ namespace GatewayServer.ControlPlane.Services
                 .ToDictionaryAsync(x => x.Code, x => x.Count);
         }
 
+        private static async Task<Dictionary<string, int>> DestinationCountsAsync(GatewayDbContext db, IEnumerable<string> codes)
+        {
+            var set = codes.ToHashSet();
+            return await db.Destinations.Where(x => set.Contains(x.ClusterCode))
+                .GroupBy(x => x.ClusterCode)
+                .Select(g => new { Code = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Code, x => x.Count);
+        }
+
         private static void Apply(ClusterEntity row, ClusterUpdateRequest req)
         {
             row.ClusterName = req.ClusterName;
@@ -97,8 +111,9 @@ namespace GatewayServer.ControlPlane.Services
             row.Remark = req.Remark;
         }
 
-        private static ClusterDto ToDto(ClusterEntity c, int usedByRouteCount) => new()
+        private static ClusterDto ToDto(ClusterEntity c, int usedByRouteCount, int destinationCount) => new()
         {
+            DestinationCount = destinationCount,
             Id = c.Id,
             ClusterCode = c.ClusterCode,
             ClusterName = c.ClusterName,

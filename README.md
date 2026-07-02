@@ -10,12 +10,14 @@ A simple gateway based on Yarp.ReverseProxy (.NET 10)
 
 前置：.NET 10 SDK、Node 22+ 与 pnpm、一个可用的 PostgreSQL。
 
-数据库连接串统一经环境变量 `ConnectionString` 传入（Npgsql 格式，**不要写进 launchSettings/appsettings 提交到仓库**）：
+数据库连接串统一经环境变量 `ConnectionString` 传入（Npgsql 格式，**不要写进 launchSettings/appsettings 提交到仓库**）。两个 .NET host 启动时会自动加载仓库根的 **`.env`**（已 gitignore），推荐直接建一份：
 
 ```bash
-# 按你的库改;Search Path 可选,用于把所有表放进指定 schema
-export ConnectionString="Host=localhost;Port=5432;Username=<user>;Password=<pwd>;Database=<db>;Search Path=bizgw"
+# .env(仓库根;按你的库改。Search Path 可选,用于把所有表放进指定 schema)
+ConnectionString=Host=localhost;Port=5432;Username=<user>;Password=<pwd>;Database=<db>;Search Path=bizgw
 ```
+
+> `dotnet ef` 等 CLI 工具不读 `.env`,跑迁移时仍需 `export ConnectionString=...`(或 `set -a; source .env; set +a`)。
 
 ```bash
 # 0) 初始化数据库(首次,以及每次迁移变更后)

@@ -3,6 +3,13 @@ import { toast } from 'sonner'
 import { api, ApiError } from '@/lib/api'
 import { queryClient } from '@/lib/query-client'
 import type { RouteDto, RouteUpsert } from '@/lib/types'
+import {
+  defaultParams,
+  newDraft,
+  parseTransforms,
+  serializeTransforms,
+  type TransformDraft,
+} from './transforms'
 
 export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const
 
@@ -25,6 +32,8 @@ type RoutesState = {
   dialogOpen: boolean
   editingId: number | null
   form: RouteUpsert
+  /** transforms 的结构化草稿(保存时序列化回 form.transforms 的 JSON) */
+  transforms: TransformDraft[]
   saving: boolean
   formError: string
   // 删除确认
@@ -46,6 +55,7 @@ export class RoutesVM extends ViewModelBase<RoutesState> {
       dialogOpen: false,
       editingId: null,
       form: emptyForm(),
+      transforms: [],
       saving: false,
       formError: '',
       deleteTarget: null,
@@ -70,6 +80,7 @@ export class RoutesVM extends ViewModelBase<RoutesState> {
   // ---- 编辑弹窗 ----
   openCreate() {
     this.data.form = emptyForm()
+    this.data.transforms = []
     this.data.editingId = null
     this.data.formError = ''
     this.data.dialogOpen = true
@@ -84,6 +95,7 @@ export class RoutesVM extends ViewModelBase<RoutesState> {
       transforms: r.transforms,
       remark: r.remark,
     }
+    this.data.transforms = parseTransforms(r.transforms)
     this.data.editingId = r.id
     this.data.formError = ''
     this.data.dialogOpen = true
@@ -104,24 +116,56 @@ export class RoutesVM extends ViewModelBase<RoutesState> {
     else arr.push(m)
   }
 
+  // ---- transforms 编辑器 ----
+  addTransform() {
+    this.data.transforms.push(newDraft())
+  }
+
+  removeTransform(id: number) {
+    const i = this.data.transforms.findIndex((t) => t.id === id)
+    if (i >= 0) this.data.transforms.splice(i, 1)
+  }
+
+  /** YARP 里 transforms 顺序有意义,支持上下移。 */
+  moveTransform(id: number, dir: -1 | 1) {
+    const arr = this.data.transforms
+    const i = arr.findIndex((t) => t.id === id)
+    const j = i + dir
+    if (i < 0 || j < 0 || j >= arr.length) return
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+
+  setTransformType(id: number, type: string) {
+    const t = this.data.transforms.find((x) => x.id === id)
+    if (!t) return
+    t.type = type
+    t.params = defaultParams(type)
+  }
+
+  setTransformParam(id: number, name: string, value: string) {
+    const t = this.data.transforms.find((x) => x.id === id)
+    if (t) t.params[name] = value
+  }
+
   async save() {
     const { form, editingId } = this.data
     // 客户端先校验(后端仍兜底)
-    if (!form.clusterCode) return void (this.data.formError = '请选择集群')
+    if (!form.clusterCode) return void (this.data.formError = '请选择目标组')
     if (!form.matchPath) return void (this.data.formError = '请填写匹配路径')
     if (form.matchMethods.length === 0) return void (this.data.formError = '至少选择一个 Method')
+    let transformsJson: string
     try {
-      const parsed = JSON.parse(form.transforms || '[]')
-      if (!Array.isArray(parsed)) throw new Error()
-    } catch {
-      return void (this.data.formError = 'transforms 必须是 JSON 数组')
+      transformsJson = serializeTransforms(this.data.transforms)
+    } catch (e) {
+      return void (this.data.formError = e instanceof Error ? e.message : '改写规则不完整')
     }
 
     this.data.saving = true
     this.data.formError = ''
+    const payload = { ...form, transforms: transformsJson }
     try {
-      if (editingId == null) await api.post('/routes', form)
-      else await api.put(`/routes/${editingId}`, form)
+      if (editingId == null) await api.post('/routes', payload)
+      else await api.put(`/routes/${editingId}`, payload)
 
       // VM 驱动 query 刷新
       queryClient.invalidateQueries({ queryKey: ['routes'] })

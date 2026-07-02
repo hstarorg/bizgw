@@ -35,14 +35,14 @@ export default function DashboardPage() {
     },
     { label: '生效版本', value: versionQ.data ? `v${versionQ.data.activeVersion}` : '—', to: '/config' },
     { label: '路由数', value: routesQ.data?.total ?? '—', to: '/routes' },
-    { label: '集群数', value: clustersQ.data?.total ?? '—', to: '/clusters' },
+    { label: '目标组数', value: clustersQ.data?.total ?? '—', to: '/clusters' },
   ]
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-xl font-semibold tracking-tight">仪表盘</h2>
-        <p className="text-muted-foreground text-sm">网关集群概览</p>
+        <p className="text-muted-foreground text-sm">网关运行概览</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (

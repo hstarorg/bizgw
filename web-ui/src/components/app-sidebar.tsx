@@ -17,7 +17,7 @@ import {
 const items = [
   { title: '仪表盘', url: '/', icon: LayoutDashboard },
   { title: '路由', url: '/routes', icon: RouteIcon },
-  { title: '集群', url: '/clusters', icon: Boxes },
+  { title: '目标组', url: '/clusters', icon: Boxes },
   { title: '配置发布', url: '/config', icon: Rocket },
   { title: '实例', url: '/instances', icon: Activity },
   { title: '用户', url: '/users', icon: Users, ownerOnly: true },

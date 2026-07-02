@@ -98,6 +98,7 @@ export type ClusterDto = {
   healthCheckPath: string
   remark: string
   usedByRouteCount: number
+  destinationCount: number
   createDate: number
   modifyDate: number
   creatorName: string

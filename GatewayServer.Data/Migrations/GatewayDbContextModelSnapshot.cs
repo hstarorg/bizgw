@@ -74,7 +74,7 @@ namespace GatewayServer.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("destination");
+                    b.ToTable("destination", (string)null);
                 });
 
             modelBuilder.Entity("GatewayServer.Data.Entities.ClusterEntity", b =>
@@ -152,7 +152,7 @@ namespace GatewayServer.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("cluster");
+                    b.ToTable("cluster", (string)null);
                 });
 
             modelBuilder.Entity("GatewayServer.Data.Entities.ConfigSnapshotEntity", b =>
@@ -189,7 +189,7 @@ namespace GatewayServer.Data.Migrations
                         .IsUnique()
                         .HasFilter("is_active");
 
-                    b.ToTable("config_snapshot");
+                    b.ToTable("config_snapshot", (string)null);
                 });
 
             modelBuilder.Entity("GatewayServer.Data.Entities.InstanceStatusEntity", b =>
@@ -225,7 +225,7 @@ namespace GatewayServer.Data.Migrations
 
                     b.HasKey("InstanceId");
 
-                    b.ToTable("instance_status");
+                    b.ToTable("instance_status", (string)null);
                 });
 
             modelBuilder.Entity("GatewayServer.Data.Entities.RouteEntity", b =>
@@ -291,7 +291,7 @@ namespace GatewayServer.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("route");
+                    b.ToTable("route", (string)null);
                 });
 
             modelBuilder.Entity("GatewayServer.Data.Entities.UserEntity", b =>
@@ -346,7 +346,7 @@ namespace GatewayServer.Data.Migrations
                         .IsUnique()
                         .HasFilter("is_deleted = 0");
 
-                    b.ToTable("app_user");
+                    b.ToTable("app_user", (string)null);
                 });
 #pragma warning restore 612, 618
         }

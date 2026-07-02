@@ -17,6 +17,8 @@ namespace GatewayServer.ControlPlane.Dtos
         public string Remark { get; set; } = "";
         /// <summary>被多少条路由引用(供删除前预警)。</summary>
         public int UsedByRouteCount { get; set; }
+        /// <summary>转发目标数量。</summary>
+        public int DestinationCount { get; set; }
         public long CreateDate { get; set; }
         public long ModifyDate { get; set; }
         public string CreatorName { get; set; } = "";
