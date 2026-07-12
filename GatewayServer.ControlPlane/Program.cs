@@ -78,9 +78,33 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// 静态托管:web-ui 构建产物(容器构建时拷入 wwwroot);本地开发走 Vite dev server,不依赖此处
+app.UseDefaultFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Vite 产物带内容 hash → 长缓存;index.html 等非 hash 文件不缓存(否则发新版拿不到新资源)
+        ctx.Context.Response.Headers.CacheControl =
+            ctx.Context.Request.Path.StartsWithSegments("/assets")
+                ? "public,max-age=31536000,immutable"
+                : "no-cache";
+    },
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// /api/* 未命中任何 controller → 信封 404(绝不能回退成 index.html)
+app.MapFallback("/api/{**path}", (HttpContext ctx) =>
+    ApiJson.WriteAsync(ctx, 404, ApiResponse.Fail(404, "接口不存在"))).AllowAnonymous();
+
+// SPA 回退:其余路径回 index.html(匿名 —— 登录/初始化引导由前端调 /api/auth/status 决定)
+app.MapFallbackToFile("index.html", new StaticFileOptions
+{
+    OnPrepareResponse = ctx => ctx.Context.Response.Headers.CacheControl = "no-cache",
+}).AllowAnonymous();
 
 app.Run();
