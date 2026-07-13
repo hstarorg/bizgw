@@ -321,7 +321,7 @@ export default function ClustersPage() {
                   <TableRow>
                     <TableHead>地址</TableHead>
                     <TableHead>名称</TableHead>
-                    <TableHead>健康检查路径</TableHead>
+                    <TableHead>专用探测地址</TableHead>
                     {canWrite && <TableHead className="w-20 text-right">操作</TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -370,7 +370,7 @@ export default function ClustersPage() {
                     onChange={(e) => vm.destSetField('name', e.target.value)}
                   />
                   <Input
-                    placeholder="健康检查路径(可选)"
+                    placeholder="专用探测地址(可选,默认用转发地址)"
                     className="col-span-2 font-mono text-xs"
                     value={snap.destForm.healthCheckPath}
                     onChange={(e) => vm.destSetField('healthCheckPath', e.target.value)}

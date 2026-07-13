@@ -60,6 +60,16 @@ const emptyForm = (): ClusterUpsert => ({
 
 const emptyDestForm = (): DestinationUpsert => ({ address: '', healthCheckPath: '', name: '' })
 
+/** 完整 http(s) URL 校验(目标的专用探测地址映射 YARP DestinationConfig.Health,语义是基地址而非路径)。 */
+const isHttpUrl = (s: string): boolean => {
+  try {
+    const u = new URL(s)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 type ClustersState = {
   page: number
   size: number
@@ -258,6 +268,10 @@ export class ClustersVM extends ViewModelBase<ClustersState> {
     const code = this.data.destCluster
     if (!code) return
     if (!this.data.destForm.address.trim()) return void (this.data.destError = '请填写地址')
+    const probe = this.data.destForm.healthCheckPath.trim()
+    if (probe && !isHttpUrl(probe))
+      return void (this.data.destError =
+        '专用探测地址必须是完整 URL(如 http://host:9090);留空则直接用转发地址探测')
 
     this.data.destSaving = true
     this.data.destError = ''
