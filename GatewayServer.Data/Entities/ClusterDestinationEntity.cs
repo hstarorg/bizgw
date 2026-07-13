@@ -26,8 +26,8 @@ namespace GatewayServer.Data.Entities
         /// <summary>
         /// 健康检查地址
         /// </summary>
-        [Column("helth_check_path")]
-        public string HelthCheckPath { get; set; } = "";
+        [Column("health_check_path")]
+        public string HealthCheckPath { get; set; } = "";
 
         [Column("is_deleted")]
         public short IsDeleted { get; set; }

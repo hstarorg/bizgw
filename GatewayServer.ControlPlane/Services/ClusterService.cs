@@ -103,11 +103,11 @@ namespace GatewayServer.ControlPlane.Services
         {
             row.ClusterName = req.ClusterName;
             row.LoadBalancingPolicy = req.LoadBalancingPolicy;
-            row.EnabledHelthCheck = (short)(req.EnabledHealthCheck ? 1 : 0);
-            row.HelthCheckInterval = req.HealthCheckInterval;
-            row.HelthCheckTimeout = req.HealthCheckTimeout;
-            row.HelthCheckPolicy = req.HealthCheckPolicy;
-            row.HelthCheckPath = req.HealthCheckPath;
+            row.EnabledHealthCheck = (short)(req.EnabledHealthCheck ? 1 : 0);
+            row.HealthCheckInterval = req.HealthCheckInterval;
+            row.HealthCheckTimeout = req.HealthCheckTimeout;
+            row.HealthCheckPolicy = req.HealthCheckPolicy;
+            row.HealthCheckPath = req.HealthCheckPath;
             row.Remark = req.Remark;
         }
 
@@ -118,11 +118,11 @@ namespace GatewayServer.ControlPlane.Services
             ClusterCode = c.ClusterCode,
             ClusterName = c.ClusterName,
             LoadBalancingPolicy = c.LoadBalancingPolicy,
-            EnabledHealthCheck = c.EnabledHelthCheck > 0,
-            HealthCheckInterval = c.HelthCheckInterval,
-            HealthCheckTimeout = c.HelthCheckTimeout,
-            HealthCheckPolicy = c.HelthCheckPolicy,
-            HealthCheckPath = c.HelthCheckPath,
+            EnabledHealthCheck = c.EnabledHealthCheck > 0,
+            HealthCheckInterval = c.HealthCheckInterval,
+            HealthCheckTimeout = c.HealthCheckTimeout,
+            HealthCheckPolicy = c.HealthCheckPolicy,
+            HealthCheckPath = c.HealthCheckPath,
             Remark = c.Remark,
             UsedByRouteCount = usedByRouteCount,
             CreateDate = c.CreateDate,

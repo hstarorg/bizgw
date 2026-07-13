@@ -18,8 +18,8 @@ Data plane (runs traffic, high-availability, scaled to many instances):
 - **GatewayServer.Tests** — MSTest unit tests for `GatewayServer`.
 
 Control plane (edits config, lower-availability, can run single-instance):
-- **GatewayServer.ControlPlane** — management REST API (renamed from the old `ConfigrationAPI`). Edits normalized config and **publishes versioned snapshots** (`ConfigController` + `ConfigPublishService` + `ConfigValidator`), emitting `pg_notify` on publish. References only `GatewayServer.Data` (no YARP). Entity CRUD (`RouteController`/`ClusterController`/BLL/DAL) is still partly stubbed.
-- **web-ui** — UmiJS 3 + React 17 + Ant Design Pro admin UI (pairs with ControlPlane). Also early-stage.
+- **GatewayServer.ControlPlane** — management REST API (renamed from the old `ConfigrationAPI`). Edits normalized config and **publishes versioned snapshots** (`ConfigController` + `ConfigPublishService` + `ConfigValidator`), emitting `pg_notify` on publish. References only `GatewayServer.Data` (no YARP). Also provides: real entity CRUD (`RouteController`/`ClusterController`/`DestinationController` → thin controllers + Services on `IDbContextFactory`), cookie auth with Owner/Editor/Viewer roles (`AuthController`/`UserController`; first user is created via the web-ui setup flow — no seed env var), a unified `{code,message,data}` response envelope (`ApiResponseWrapperFilter` + `ApiExceptionMiddleware`), and static hosting of the built web-ui (SPA fallback to `index.html`, `/api/*` misses return an enveloped JSON 404).
+- **web-ui** — Vite 8 + React 19 + TypeScript + Tailwind v4 + shadcn/ui admin SPA (react-router v7, TanStack Query + bizify VMs). Pages: Dashboard / Routes / Clusters / Config(publish+rollback) / Instances / Users. In dev it runs standalone with a `/api` proxy to ControlPlane (port 5160); in deployment its build output is served by ControlPlane from `wwwroot` (single container). See `web-ui/CLAUDE.md` for UI conventions.
 
 Shared:
 - **GatewayServer.Data** — entities (`Route`/`Cluster`/`ClusterDestination`/`EntityBase` + `ConfigSnapshot`) + `GatewayDbContext` + `AddGatewayData` DI extension + design-time factory + EF Core `Migrations/` + the `ConfigChannel` notify-channel constant (`proxy_reload`). References EF Core / Npgsql / EF Core Design. No YARP.
@@ -30,7 +30,7 @@ Architectural reason for splitting the gateway from the management API: differen
 
 Editing and runtime config are **separated**: the data plane never reads the editing tables — only immutable, versioned **snapshots**. This gives atomic activation, validate-before-publish, rollback, and decoupling of the gateway from the editing schema.
 
-**Edit (control plane).** `route` / `cluster` / `destination` tables are the editable source of truth (normalized; `is_deleted` logical-delete via a global `HasQueryFilter`). The ControlPlane API mutates these (CRUD partly stubbed).
+**Edit (control plane).** `route` / `cluster` / `destination` tables are the editable source of truth (normalized; `is_deleted` logical-delete via a global `HasQueryFilter`). The ControlPlane API mutates these.
 
 **Publish (control plane).** `POST /api/config/publish` (`ConfigController` → `ConfigPublishService`): serialize the current normalized config into a `ConfigSnapshotDoc`, **validate** it (`ConfigValidator`: route→cluster referential integrity, non-empty match path, parseable `transforms`, unique/non-empty cluster codes), then write a new **`config_snapshot`** row in one transaction (`version = max+1`, `is_active = true`, previous active cleared first; a partial unique index enforces a single active row). Invalid config → 422, never reaches a gateway. `POST /api/config/rollback/{version}` re-publishes an old snapshot's doc as a new version. After commit it fires `SELECT pg_notify('proxy_reload', '<version>')` (inline — keeps ControlPlane YARP-free).
 
@@ -86,15 +86,14 @@ dotnet ef database update --project GatewayServer.Data
 ### web-ui (run from `web-ui/`, uses pnpm)
 ```bash
 pnpm install
-pnpm start        # umi dev server
-pnpm build        # umi build
-pnpm test         # umi-test
-pnpm prettier     # format
+pnpm dev          # vite dev server (proxies /api to ControlPlane on 5160)
+pnpm build        # tsc -b && vite build (output: dist/)
+pnpm typecheck    # tsc -b --noEmit
 ```
 
 ## Deployment
 
-Docker-based, .NET 10. Each .NET project's `Dockerfile` is a self-contained multi-stage build (restore → publish → run) — **the build context is the solution root**, e.g. `docker build -f GatewayServer/Dockerfile -t bizgw/gateway .`. Containers listen on **8080** (the .NET 8+ image default, non-root `app` user) — not the old port 80. `docker-compose.yml` brings up PostgreSQL 18 (`db`) + gateway (8889) + control-plane (8890). GatewayServer needs external network exposure; the API + UI should stay internal. See README for full steps.
+Docker-based, .NET 10. Each .NET project's `Dockerfile` is a self-contained multi-stage build (restore → publish → run) — **the build context is the solution root**, e.g. `docker build -f GatewayServer/Dockerfile -t bizgw/gateway .`. Containers listen on **8080** (the .NET 8+ image default, non-root `app` user) — not the old port 80. `docker-compose.yml` brings up PostgreSQL 18 (`db`) + gateway (8889) + control-plane (8890). The control-plane Dockerfile has an extra `node:22-alpine` stage that builds the web-ui with pnpm and copies `dist` into `/app/wwwroot` — one container serves both the API and the UI. GatewayServer needs external network exposure; the control plane (API + UI) should stay internal. See README for full steps.
 
 The compose `db` service starts an empty database; migrations are not run automatically. After first start, create the tables once with `dotnet ef database update --project GatewayServer.Data` pointed at the db.
 

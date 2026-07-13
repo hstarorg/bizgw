@@ -52,15 +52,11 @@ app.UseCors(builder =>
          .AllowAnyHeader();
 });
 
-app.UseRouting();
-// 使用路由端点
-app.UseEndpoints(endpoints =>
+// 反向代理端点(顶层注册,替代 UseRouting/UseEndpoints)
+app.MapReverseProxy(proxyPipeline =>
 {
-    endpoints.MapReverseProxy((proxyPipeline) =>
-    {
-        // 注册日志记录中间件
-        proxyPipeline.UseLogRequest();
-    });
+    // 注册日志记录中间件
+    proxyPipeline.UseLogRequest();
 });
 
 GlobalConfig.AuthCode = Environment.GetEnvironmentVariable("AuthCode") ?? GatewayUtil.GenerateRandomString();

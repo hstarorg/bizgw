@@ -28,20 +28,20 @@ namespace GatewayServer.Data.Entities
 
         #region 健康检查相关
 
-        [Column("enabled_helth_check")]
-        public short EnabledHelthCheck { get; set; }
+        [Column("enabled_health_check")]
+        public short EnabledHealthCheck { get; set; }
 
-        [Column("helth_check_interval")]
-        public int HelthCheckInterval { get; set; }
+        [Column("health_check_interval")]
+        public int HealthCheckInterval { get; set; }
 
-        [Column("helth_check_timeout")]
-        public int HelthCheckTimeout { get; set; }
+        [Column("health_check_timeout")]
+        public int HealthCheckTimeout { get; set; }
 
-        [Column("helth_check_policy")]
-        public string HelthCheckPolicy { get; set; } = "";
+        [Column("health_check_policy")]
+        public string HealthCheckPolicy { get; set; } = "";
 
-        [Column("helth_check_path")]
-        public string HelthCheckPath { get; set; } = "";
+        [Column("health_check_path")]
+        public string HealthCheckPath { get; set; } = "";
 
         #endregion
 

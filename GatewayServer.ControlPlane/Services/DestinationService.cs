@@ -29,7 +29,7 @@ namespace GatewayServer.ControlPlane.Services
             {
                 ClusterCode = clusterCode,
                 Address = req.Address,
-                HelthCheckPath = req.HealthCheckPath,
+                HealthCheckPath = req.HealthCheckPath,
                 Name = req.Name,
                 CreatorName = By,
                 ModifierName = By,
@@ -47,7 +47,7 @@ namespace GatewayServer.ControlPlane.Services
             var row = await db.Destinations.FirstOrDefaultAsync(x => x.Id == id && x.ClusterCode == clusterCode)
                 ?? throw ApiException.NotFound("目标不存在");
             row.Address = req.Address;
-            row.HelthCheckPath = req.HealthCheckPath;
+            row.HealthCheckPath = req.HealthCheckPath;
             row.Name = req.Name;
             row.ModifierName = By;
             row.ModifyDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -72,7 +72,7 @@ namespace GatewayServer.ControlPlane.Services
             Id = d.Id,
             ClusterCode = d.ClusterCode,
             Address = d.Address,
-            HealthCheckPath = d.HelthCheckPath,
+            HealthCheckPath = d.HealthCheckPath,
             Name = d.Name,
             CreateDate = d.CreateDate,
             ModifyDate = d.ModifyDate,

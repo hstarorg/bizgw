@@ -2,6 +2,6 @@
 {
     public class ReloadDTO
     {
-        public string AuthCode { get; set; }
+        public string? AuthCode { get; set; }
     }
 }

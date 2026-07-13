@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GatewayServer.ControlPlane.Dtos
 {
-    /// <summary>集群响应。健康检查字段用清晰命名(实体里是 Helth 拼写)。</summary>
+    /// <summary>集群响应。</summary>
     public sealed class ClusterDto
     {
         public long Id { get; set; }

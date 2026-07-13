@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GatewayServer.Data.Migrations
 {
     [DbContext(typeof(GatewayDbContext))]
-    [Migration("20260701094047_AddUser")]
-    partial class AddUser
+    [Migration("20260713060449_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,10 +52,10 @@ namespace GatewayServer.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("creator_name");
 
-                    b.Property<string>("HelthCheckPath")
+                    b.Property<string>("HealthCheckPath")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("helth_check_path");
+                        .HasColumnName("health_check_path");
 
                     b.Property<short>("IsDeleted")
                         .HasColumnType("smallint")
@@ -108,27 +108,27 @@ namespace GatewayServer.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("creator_name");
 
-                    b.Property<short>("EnabledHelthCheck")
+                    b.Property<short>("EnabledHealthCheck")
                         .HasColumnType("smallint")
-                        .HasColumnName("enabled_helth_check");
+                        .HasColumnName("enabled_health_check");
 
-                    b.Property<int>("HelthCheckInterval")
+                    b.Property<int>("HealthCheckInterval")
                         .HasColumnType("integer")
-                        .HasColumnName("helth_check_interval");
+                        .HasColumnName("health_check_interval");
 
-                    b.Property<string>("HelthCheckPath")
+                    b.Property<string>("HealthCheckPath")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("helth_check_path");
+                        .HasColumnName("health_check_path");
 
-                    b.Property<string>("HelthCheckPolicy")
+                    b.Property<string>("HealthCheckPolicy")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("helth_check_policy");
+                        .HasColumnName("health_check_policy");
 
-                    b.Property<int>("HelthCheckTimeout")
+                    b.Property<int>("HealthCheckTimeout")
                         .HasColumnType("integer")
-                        .HasColumnName("helth_check_timeout");
+                        .HasColumnName("health_check_timeout");
 
                     b.Property<short>("IsDeleted")
                         .HasColumnType("smallint")

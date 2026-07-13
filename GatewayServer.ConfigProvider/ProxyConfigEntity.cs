@@ -46,7 +46,7 @@ namespace GatewayServer.ConfigProvider
             // 先解析出数据
             try
             {
-                var transformList = JsonConvert.DeserializeObject<List<TransformItem>>(transformsStr);
+                var transformList = JsonConvert.DeserializeObject<List<TransformItem>>(transformsStr) ?? [];
                 transformList.ForEach(transform =>
                 {
                     transforms.Add(transform.Value);
@@ -66,7 +66,7 @@ namespace GatewayServer.ConfigProvider
             clusters.ForEach(c =>
             {
                 var destinations = c.ClusterDestinations
-                .Select(x => new KeyValuePair<string, DestinationConfig>($"ClusterDest_{x.Id}", new DestinationConfig { Address = x.Address, Health = x.HelthCheckPath == "" ? null : x.HelthCheckPath }));
+                .Select(x => new KeyValuePair<string, DestinationConfig>($"ClusterDest_{x.Id}", new DestinationConfig { Address = x.Address, Health = x.HealthCheckPath == "" ? null : x.HealthCheckPath }));
                 var clusterConfig = new ClusterConfig()
                 {
                     ClusterId = c.ClusterCode,
@@ -75,12 +75,12 @@ namespace GatewayServer.ConfigProvider
                     {
                         Active = new ActiveHealthCheckConfig
                         {
-                            Enabled = c.EnabledHelthCheck > 0,
-                            Interval = this.Second2TimeSpan(c.HelthCheckInterval),
-                            Timeout = this.Second2TimeSpan(c.HelthCheckTimeout),
+                            Enabled = c.EnabledHealthCheck > 0,
+                            Interval = this.Second2TimeSpan(c.HealthCheckInterval),
+                            Timeout = this.Second2TimeSpan(c.HealthCheckTimeout),
                             // 为空就不要赋值 path 了
-                            Path = c.HelthCheckPath == "" ? null : c.HelthCheckPath,
-                            Policy = c.HelthCheckPolicy,
+                            Path = c.HealthCheckPath == "" ? null : c.HealthCheckPath,
+                            Policy = c.HealthCheckPolicy,
                         }
                     },
                     Destinations = destinations.ToDictionary(x => x.Key, x => x.Value)
