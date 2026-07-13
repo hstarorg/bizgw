@@ -40,6 +40,8 @@ services:
       dockerfile: GatewayServer.ControlPlane/Dockerfile
     environment:
       ConnectionString: 'Host=db;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb'
+      # 登录 cookie 加密密钥(演示值,产线务必更换:openssl rand -base64 32);不配则重启后登录态失效
+      AuthCookieKey: 'kQLPrSpVQNQYwu5c2uKpyLlU+lbjeJow6Cw1k3oXZtc='
     ports:
       - '8890:8080'
     depends_on:

@@ -62,6 +62,7 @@ To add a new config backend (e.g. Redis): add `RedisConfigSource : IProxyConfigS
 - `INSTANCE_ID` (optional, GatewayServer) — instance id for status reporting; falls back to `HOSTNAME`, then a generated GUID. Set distinct per replica.
 - `InstanceStatus__HeartbeatSeconds` (optional, GatewayServer) — heartbeat upsert interval, default `10`.
 - `InstanceStatus__OfflineAfterSeconds` (optional, ControlPlane) — `/api/instances` marks an instance offline if its last heartbeat is older than this, default `45`.
+- `AuthCookieKey` (**required**, ControlPlane) — base64 of 32 random bytes (`openssl rand -base64 32`); fixed key for auth-cookie ticket encryption (AES-GCM via `FixedKeyTicketFormat`, replaces DataProtection — cookies survive container rebuilds and work across instances). Startup fails fast if unset or not valid base64. Rotating the key = change env + restart (everyone re-logs-in).
 - `Observability__Enabled` (optional, GatewayServer) — turns on OpenTelemetry (traces/metrics/logs via OTLP). **Default `false`** — when off, no OTel is registered (zero overhead, no collector needed). When on, the standard `OTEL_*` env vars apply (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_TRACES_SAMPLER`, `OTEL_SERVICE_NAME`).
 
 ## Database

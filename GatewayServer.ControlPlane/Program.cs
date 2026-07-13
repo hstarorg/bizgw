@@ -41,10 +41,22 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddSingleton<IPasswordHasher<UserEntity>, PasswordHasher<UserEntity>>();
 builder.Services.AddScoped<UserService>();
 
+// Cookie 票据密钥:env AuthCookieKey(32 字节的 base64,生成:openssl rand -base64 32)。必填 —— 缺失直接启动失败。
+var cookieKeyB64 = builder.Configuration["AuthCookieKey"];
+if (string.IsNullOrEmpty(cookieKeyB64))
+{
+    throw new InvalidOperationException("必须配置环境变量 AuthCookieKey(32 字节的 base64,生成:openssl rand -base64 32)。");
+}
+byte[] cookieKey;
+try { cookieKey = Convert.FromBase64String(cookieKeyB64); }
+catch (FormatException) { throw new InvalidOperationException("AuthCookieKey 不是合法的 base64。"); }
+
 // Cookie 认证:未认证/越权对 /api 返回 401/403 信封(不 302 跳转)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
     {
+        // 固定密钥加密票据(替代 DataProtection):登录态不再依赖容器本地 key ring
+        o.TicketDataFormat = new FixedKeyTicketFormat(cookieKey);
         o.Cookie.Name = "bizgw.auth";
         o.Cookie.HttpOnly = true;
         o.Cookie.SameSite = SameSiteMode.Lax;

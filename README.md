@@ -15,6 +15,9 @@ A simple gateway based on Yarp.ReverseProxy (.NET 10)
 ```bash
 # .env(仓库根;按你的库改。Search Path 可选,用于把所有表放进指定 schema)
 ConnectionString=Host=localhost;Port=5432;Username=<user>;Password=<pwd>;Database=<db>;Search Path=bizgw
+# 必填(控制面):登录 cookie 的加密密钥,32 字节的 base64(生成:openssl rand -base64 32)。
+# 缺失则 ControlPlane 启动失败;换密钥 = 换值重启(全员重新登录)
+AuthCookieKey=<openssl rand -base64 32 的输出>
 ```
 
 > `dotnet ef` 等 CLI 工具不读 `.env`,跑迁移时仍需 `export ConnectionString=...`(或 `set -a; source .env; set +a`)。

@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GatewayServer\GatewayServer.csproj" />
+    <ProjectReference Include="..\GatewayServer.ControlPlane\GatewayServer.ControlPlane.csproj" />
   </ItemGroup>
 
 </Project>
