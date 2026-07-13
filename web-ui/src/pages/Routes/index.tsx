@@ -28,6 +28,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { FormDialogContent } from '@/components/form-dialog-content'
+import { RichSelectItem } from '@/components/rich-select-item'
 import {
   Select,
   SelectContent,
@@ -71,6 +72,10 @@ export default function RoutesPage() {
   })
 
   const totalPages = routesQ.data ? Math.max(1, Math.ceil(routesQ.data.total / snap.size)) : 1
+
+  // 列表里目标组显示名称(code 是内部连接键,查不到名称时才回退显示 code)
+  const clusterNameOf = (code: string) =>
+    clustersQ.data?.items.find((c) => c.clusterCode === code)?.clusterName || code
 
   return (
     <div className="space-y-4">
@@ -154,7 +159,7 @@ export default function RoutesPage() {
                     ))}
                   </div>
                 </TableCell>
-                <TableCell>{r.clusterCode}</TableCell>
+                <TableCell>{clusterNameOf(r.clusterCode)}</TableCell>
                 <TableCell className="text-muted-foreground text-xs">
                   {fmtTime(r.modifyDate)}
                   <span className="ml-1">{r.modifierName}</span>
@@ -226,10 +231,12 @@ export default function RoutesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {clustersQ.data?.items.map((c) => (
-                    <SelectItem key={c.clusterCode} value={c.clusterCode}>
-                      {c.clusterCode}
-                      {c.clusterName ? ` (${c.clusterName})` : ''}
-                    </SelectItem>
+                    <RichSelectItem
+                      key={c.clusterCode}
+                      value={c.clusterCode}
+                      label={c.clusterName || c.clusterCode}
+                      code={c.clusterName ? c.clusterCode : undefined}
+                    />
                   ))}
                 </SelectContent>
               </Select>

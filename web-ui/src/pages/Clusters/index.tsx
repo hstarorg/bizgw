@@ -100,8 +100,8 @@ export default function ClustersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
               <TableHead>名称</TableHead>
+              <TableHead>Code</TableHead>
               <TableHead>转发目标</TableHead>
               <TableHead>负载策略</TableHead>
               <TableHead>健康检查</TableHead>
@@ -127,14 +127,14 @@ export default function ClustersPage() {
             )}
             {clustersQ.data?.items.map((c) => (
               <TableRow key={c.id}>
-                <TableCell className="font-mono font-medium">{c.clusterCode}</TableCell>
-                <TableCell>{c.clusterName || '—'}</TableCell>
+                <TableCell className="font-medium">{c.clusterName || c.clusterCode}</TableCell>
+                <TableCell className="text-muted-foreground font-mono text-xs">{c.clusterCode}</TableCell>
                 <TableCell>
                   <Button
                     variant="link"
                     size="sm"
                     className={`h-auto p-0 ${c.destinationCount === 0 ? 'text-destructive' : ''}`}
-                    onClick={() => vm.openDests(c.clusterCode)}
+                    onClick={() => vm.openDests(c)}
                   >
                     <Network className="size-3.5" />
                     {c.destinationCount > 0 ? `${c.destinationCount} 个目标` : '无目标,去添加'}
@@ -196,20 +196,11 @@ export default function ClustersPage() {
       <Dialog open={snap.dialogOpen} onOpenChange={(o) => !o && vm.closeDialog()}>
         <FormDialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{snap.editingId == null ? '新建目标组' : `编辑目标组 ${snap.form.clusterCode}`}</DialogTitle>
+            <DialogTitle>
+              {snap.editingId == null ? '新建目标组' : `编辑目标组 ${snap.form.clusterName || snap.form.clusterCode}`}
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4">
-            {snap.editingId == null && (
-              <div className="grid gap-2">
-                <Label htmlFor="clusterCode">组标识 Code(创建后不可改;路由/目标经它关联)</Label>
-                <Input
-                  id="clusterCode"
-                  className="font-mono"
-                  value={snap.form.clusterCode}
-                  onChange={(e) => vm.setField('clusterCode', e.target.value)}
-                />
-              </div>
-            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="clusterName">名称</Label>
@@ -236,6 +227,19 @@ export default function ClustersPage() {
                 </Select>
               </div>
             </div>
+            {snap.editingId == null && (
+              <div className="grid gap-1.5">
+                <Label htmlFor="clusterCode" className="text-muted-foreground text-xs font-normal">
+                  组标识 Code —— 由名称自动生成,可改;创建后不可改,路由/目标与网关日志经它关联
+                </Label>
+                <Input
+                  id="clusterCode"
+                  className="h-8 font-mono text-sm"
+                  value={snap.form.clusterCode}
+                  onChange={(e) => vm.setField('clusterCode', e.target.value)}
+                />
+              </div>
+            )}
             <label className="flex items-center gap-2 text-sm">
               <Checkbox
                 checked={snap.form.enabledHealthCheck}
@@ -308,7 +312,7 @@ export default function ClustersPage() {
       <Dialog open={!!snap.destCluster} onOpenChange={(o) => !o && vm.closeDests()}>
         <FormDialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>目标管理 — {snap.destCluster}</DialogTitle>
+            <DialogTitle>目标管理 — {snap.destClusterName || snap.destCluster}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="rounded-lg border">
@@ -395,7 +399,7 @@ export default function ClustersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>删除目标组</AlertDialogTitle>
             <AlertDialogDescription>
-              确认删除目标组「{snap.deleteTarget?.clusterCode}」?
+              确认删除目标组「{snap.deleteTarget?.clusterName || snap.deleteTarget?.clusterCode}」?
               {snap.deleteTarget && snap.deleteTarget.usedByRouteCount > 0 && (
                 <span className="text-destructive block font-medium">
                   ⚠ 它正被 {snap.deleteTarget.usedByRouteCount} 条路由引用,删除后这些路由将无法通过发布校验。
