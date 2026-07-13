@@ -66,7 +66,7 @@ To add a new config backend (e.g. Redis): add `RedisConfigSource : IProxyConfigS
 
 ## Database
 
-PostgreSQL via EF Core. Schema is managed by **EF Core Migrations** in `GatewayServer.Data/Migrations/` — create/upgrade tables with `dotnet ef database update --project GatewayServer.Data` (needs `ConnectionString`). Entities use EF data annotations (`[Table]`/`[Column]`/`[Key]`/`[DatabaseGenerated]`) mapping PascalCase props to snake_case columns. The editing tables (`route`/`cluster`/`destination`) use logical delete (`is_deleted`, enforced via a global `HasQueryFilter`). The append-only **`config_snapshot`** table (`version` bigint PK, `doc` jsonb, `schema_version`, `is_active` with a partial unique index `WHERE is_active`, `published_at`/`published_by`) holds published runtime config; the data plane reads only its active row. The legacy MySQL DDL in `docs/*.sql` is deprecated — historical reference only.
+PostgreSQL via EF Core. Schema is managed by **EF Core Migrations** in `GatewayServer.Data/Migrations/` — create/upgrade tables with `dotnet ef database update --project GatewayServer.Data` (needs `ConnectionString`). Entities use EF data annotations (`[Table]`/`[Column]`/`[Key]`/`[DatabaseGenerated]`) mapping PascalCase props to snake_case columns. The editing tables (`route`/`cluster`/`destination`) use logical delete (`is_deleted`, enforced via a global `HasQueryFilter`). The append-only **`config_snapshot`** table (`version` bigint PK, `doc` jsonb, `schema_version`, `is_active` with a partial unique index `WHERE is_active`, `published_at`/`published_by`) holds published runtime config; the data plane reads only its active row.
 
 ## Commands
 

@@ -87,7 +87,7 @@ fetch("http://server:port/reload", {
 
 #### 1、初始化数据库
 
-当前使用 **PostgreSQL**，数据访问基于 **EF Core**，表结构由 EF Core Migrations 管理（不再使用 `docs/*.sql` 手写脚本）。先准备好一个空库，再用迁移建表：
+当前使用 **PostgreSQL**，数据访问基于 **EF Core**，表结构由 EF Core Migrations 管理。先准备好一个空库，再用迁移建表：
 
 ```bash
 # 全局安装一次 ef 工具
@@ -97,8 +97,6 @@ dotnet tool install --global dotnet-ef
 ConnectionString="Host=localhost;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb" \
   dotnet ef database update --project GatewayServer.Data
 ```
-
-> 注意：`docs/*.sql` 是旧版 MySQL 手写脚本，已弃用，仅作历史参考。
 
 #### 2、镜像构建（从源码构建，无需 Visual Studio 发布）
 

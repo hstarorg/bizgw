@@ -8,17 +8,15 @@
 
 services:
   db:
-    image: postgres:18
+    image: postgres:18.1-alpine3.23
     environment:
       POSTGRES_PASSWORD: localDev
       POSTGRES_DB: gatewaydb
-    ports:
-      - "5432:5432"
     # postgres:18 起数据目录改为 /var/lib/postgresql 下的版本化子目录,卷需挂在此处
     volumes:
       - db-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d gatewaydb"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d gatewaydb']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -28,10 +26,10 @@ services:
       context: .
       dockerfile: GatewayServer/Dockerfile
     environment:
-      ConnectionString: "Host=db;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb"
-      AuthCode: "change-me-in-prod"
+      ConnectionString: 'Host=db;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb'
+      AuthCode: 'change-me-in-prod'
     ports:
-      - "8889:8080"
+      - '8889:8080'
     depends_on:
       db:
         condition: service_healthy
@@ -41,9 +39,9 @@ services:
       context: .
       dockerfile: GatewayServer.ControlPlane/Dockerfile
     environment:
-      ConnectionString: "Host=db;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb"
+      ConnectionString: 'Host=db;Port=5432;Username=postgres;Password=localDev;Database=gatewaydb'
     ports:
-      - "8890:8080"
+      - '8890:8080'
     depends_on:
       db:
         condition: service_healthy
