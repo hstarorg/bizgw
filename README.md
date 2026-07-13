@@ -98,6 +98,18 @@ ConnectionString="Host=localhost;Port=5432;Username=postgres;Password=localDev;D
   dotnet ef database update --project GatewayServer.Data
 ```
 
+**产线环境不要直接跑 `dotnet ef database update`**，改用可审计的 SQL 脚本流程：
+
+```bash
+# 1) 发布时生成幂等迁移脚本（作为发布产物归档、供 review/审计）
+scripts/gen-migrate-sql.sh          # 产出 artifacts/migrate-<git sha>.sql
+
+# 2) 审阅通过后，在变更窗口执行（先备份）
+psql -h <host> -U <user> -d <db> -v ON_ERROR_STOP=1 -f artifacts/migrate-<sha>.sql
+```
+
+脚本自带版本判断（查 `__EFMigrationsHistory`），已应用过的迁移会跳过，重复执行安全。迁移始终是部署流程中**独立的一步**：先迁库、再滚动发布应用——应用启动时不做自动迁移（网关多实例，启动自动迁移会并发抢改 schema）。
+
 #### 2、镜像构建（从源码构建，无需 Visual Studio 发布）
 
 各项目的 `Dockerfile` 已是自包含的多阶段构建（restore → publish → 运行）。**构建上下文为解决方案根目录**：

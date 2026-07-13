@@ -80,7 +80,11 @@ dotnet test --filter TestGenerateRandomString      # run a single test
 
 # EF Core migrations (run from repo root; needs ConnectionString for `database update`)
 dotnet ef migrations add <Name> --project GatewayServer.Data
-dotnet ef database update --project GatewayServer.Data
+dotnet ef database update --project GatewayServer.Data   # dev only — never run directly against production
+
+# Production migration: generate an auditable idempotent SQL script (artifacts/migrate-<sha>.sql),
+# review it, then apply with psql. Migration is a separate deploy step; the apps never auto-migrate.
+scripts/gen-migrate-sql.sh
 ```
 
 ### web-ui (run from `web-ui/`, uses pnpm)

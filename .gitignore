@@ -8,3 +8,5 @@ PublishProfiles/
 .env
 # 本地验证静态托管时从 web-ui/dist 拷入;正式产物由 Docker 构建拷入镜像
 GatewayServer.ControlPlane/wwwroot/
+# scripts/gen-migrate-sql.sh 的产物(发布工件,不入库)
+artifacts/
